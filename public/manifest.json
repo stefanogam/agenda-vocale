@@ -1,0 +1,15 @@
+{
+  "name": "Agenda — Assistente vocale",
+  "short_name": "Agenda",
+  "description": "Appuntamenti, scadenze e promemoria, con creazione vocale.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1B2333",
+  "theme_color": "#1B2333",
+  "lang": "it",
+  "icons": [
+    { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
