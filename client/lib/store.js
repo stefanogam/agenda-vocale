@@ -11,6 +11,7 @@
 
 import * as db from "./db.js";
 import { RRule } from "rrule";
+import { descendantIds } from "./todo-tree.js";
 
 const DEFAULT_CATEGORIES = [
   { name: "Lavoro", color: "#8AA0E8", icon: "Briefcase" },
@@ -19,6 +20,7 @@ const DEFAULT_CATEGORIES = [
   { name: "Scadenza", color: "#F0A868", icon: "AlarmClock" },
   { name: "Finanze", color: "#6FB3AE", icon: "Wallet" },
   { name: "Casa", color: "#B98BD6", icon: "Home" },
+  { name: "To-do", color: "#D8C36B", icon: "Star" },
 ];
 const DEFAULT_BADGES = [
   { name: "Urgente", color: "#E8735F" },
@@ -70,6 +72,10 @@ export async function createItem(data) {
     badges: [],
     reminders: [],           // minuti prima dell'orario; vuoto = nessun promemoria
     last_checked_at: null, // solo per i radar
+    // solo per i to-do
+    parent_id: null,       // null = attività di primo livello
+    done: false,
+    order: 0,
     created_via: "manual",  // 'manual' | 'voice'
     raw_transcript: null,
     created_at: new Date().toISOString(),
@@ -333,4 +339,65 @@ export async function importBackup(backup) {
   if (settings) await db.put("settings", { ...settings, key: "user-settings" });
 
   return { items: items.length, categories: categories.length, badges: badges.length };
+}
+
+// ------------------------------------------------------------
+// TO-DO
+//
+// Sono elementi come gli altri (type: "todo"), solo con un genitore e
+// uno stato "fatto". Il vantaggio di non farne una tabella separata: se
+// un to-do ha una scadenza, compare da solo nei calendari insieme a
+// tutto il resto, senza codice dedicato.
+// ------------------------------------------------------------
+
+
+const TODO_CATEGORY = "To-do";
+
+// Garantisce che la categoria "To-do" esista, anche per chi usa l'app da
+// prima che venisse introdotta
+export async function ensureTodoCategory() {
+  const cats = await db.getAll("categories");
+  const found = cats.find((c) => c.name === TODO_CATEGORY);
+  if (found) return found;
+  return db.put("categories", { id: db.newId(), name: TODO_CATEGORY, color: "#D8C36B", icon: "Star" });
+}
+
+export async function listTodos() {
+  const items = await db.getAll("items");
+  return items.filter((i) => i.type === "todo");
+}
+
+export async function createTodo({ title, parent_id = null, date = null, notes = null }) {
+  await ensureTodoCategory();
+  const siblings = (await listTodos()).filter((t) => (t.parent_id ?? null) === parent_id);
+  const order = siblings.reduce((max, t) => Math.max(max, t.order ?? 0), 0) + 1;
+
+  return createItem({
+    type: "todo",
+    title,
+    category: TODO_CATEGORY,
+    parent_id,
+    order,
+    done: false,
+    date,
+    all_day: true,
+    time: null,
+    deadline: !!date, // con una scadenza compare nei calendari col conto alla rovescia
+    notes,
+  });
+}
+
+export async function toggleTodoDone(id) {
+  const todo = await db.get("items", id);
+  if (!todo) return;
+  return updateItem(id, { done: !todo.done });
+}
+
+// Cancella l'attività e tutto il ramo che ci sta sotto
+export async function deleteTodo(id) {
+  const todos = await listTodos();
+  for (const childId of descendantIds(todos, id)) {
+    await db.remove("items", childId);
+  }
+  await db.remove("items", id);
 }

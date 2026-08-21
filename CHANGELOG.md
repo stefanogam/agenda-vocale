@@ -6,6 +6,26 @@ Ogni modifica al progetto incrementa il numero di versione qui sotto e in
 - **MINOR** (0.X.0): nuove funzionalità che non rompono quelle esistenti
 - **MAJOR** (X.0.0): cambiamenti che rompono la compatibilità con l'uso precedente
 
+## [0.7.0] — 2026-08-21
+
+Nuova sezione To-do.
+
+- Quinta scheda **To-do**, dopo Radar: attività da fare con spunta;
+  una volta fatte compaiono **barrate**
+- **Sotto-attività annidate** senza limite di profondità, numerate
+  automaticamente (1, 1.1, 1.1.1, 1.2, 2, 2.1 …). La numerazione si
+  ricalcola da sola: spostare o cancellare un'attività non lascia buchi
+- Ogni attività con figli mostra l'avanzamento (es. `1/5`)
+- **Scadenza opzionale**: impostandola, l'attività compare da sola nei
+  calendari (Mese, Settimana, Lista) con categoria "To-do" e lo stesso
+  titolo. Le scadenze superate sono evidenziate in rosso
+- Aggiunta inline: si scrive il titolo e si preme Invio, restando sullo
+  stesso livello per inserirne altre di seguito
+- Eliminando un'attività si elimina anche il ramo sottostante, previa
+  conferma che dice quante sotto-attività verranno rimosse
+- Nuova categoria predefinita **To-do**, creata automaticamente anche per
+  chi usa l'app da prima
+
 ## [0.6.0] — 2026-08-21
 
 Scorrimento con il dito, backup, e correzione delle date.

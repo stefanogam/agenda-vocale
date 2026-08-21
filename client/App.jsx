@@ -1,6 +1,6 @@
 // client/App.jsx
 import { useState, useEffect, useCallback } from "react";
-import { Bell, Plus, CalendarDays, Settings as SettingsIcon, Star, List, CalendarRange, Calendar as CalendarIcon, Eye, Search as SearchIcon } from "lucide-react";
+import { Bell, Plus, CalendarDays, Settings as SettingsIcon, Star, List, CalendarRange, Calendar as CalendarIcon, Eye, Search as SearchIcon, CheckSquare } from "lucide-react";
 import { tokens, SWATCHES } from "./lib/tokens.js";
 import { ICONS } from "./lib/icons.js";
 import * as store from "./lib/store.js";
@@ -15,6 +15,8 @@ import EventRow from "./components/EventRow.jsx";
 import WeekView from "./components/WeekView.jsx";
 import MonthView from "./components/MonthView.jsx";
 import RadarView from "./components/RadarView.jsx";
+import TodoView from "./components/TodoView.jsx";
+import TodoSheet from "./components/TodoSheet.jsx";
 import SearchScreen from "./components/SearchScreen.jsx";
 import VoiceCapture from "./components/VoiceCapture.jsx";
 import ManageScreen from "./components/ManageScreen.jsx";
@@ -47,6 +49,7 @@ export default function App() {
   const [creating, setCreating] = useState(false);
   const [createDraft, setCreateDraft] = useState(null);
   const [detail, setDetail] = useState(null); // { occ, isRadar } | null
+  const [todoDetail, setTodoDetail] = useState(null);
 
   const reload = useCallback(async () => {
     const [allItems, cats, bdgs, cfg] = await Promise.all([
@@ -187,7 +190,7 @@ export default function App() {
           </div>
 
           <div className="flex rounded-full p-1 mx-6 mb-3" style={{ background: tokens.surface }}>
-            {[{ k: "mese", l: "Mese", i: CalendarIcon }, { k: "lista", l: "Lista", i: List }, { k: "settimana", l: "Sett.", i: CalendarRange }, { k: "radar", l: "Radar", i: Eye }].map(({ k, l, i: Ic }) => (
+            {[{ k: "mese", l: "Mese", i: CalendarIcon }, { k: "lista", l: "Lista", i: List }, { k: "settimana", l: "Sett.", i: CalendarRange }, { k: "radar", l: "Radar", i: Eye }, { k: "todo", l: "To-do", i: CheckSquare }].map(({ k, l, i: Ic }) => (
               <button key={k} onClick={() => setAgendaView(k)} className="flex-1 flex items-center justify-center gap-1 rounded-full py-1.5 text-xs f-mono" style={{ background: agendaView === k ? tokens.amber : "transparent", color: agendaView === k ? tokens.bg : tokens.textSecondary }}>
                 <Ic size={12} /> {l}
               </button>
@@ -235,6 +238,16 @@ export default function App() {
             />
           )}
 
+          {agendaView === "todo" && (
+            <TodoView
+              todos={items.filter((i) => i.type === "todo")}
+              today={today}
+              onToggle={async (id) => { await store.toggleTodoDone(id); await reload(); }}
+              onCreate={async (data) => { await store.createTodo(data); await reload(); }}
+              onOpen={(t) => setTodoDetail(t)}
+            />
+          )}
+
           {agendaView === "radar" && (
             <RadarView
               items={items}
@@ -247,14 +260,17 @@ export default function App() {
           )}
 
           <div className="absolute left-0 right-0 flex items-center justify-center gap-3" style={{ bottom: 96 }}>
-            <button
-              onClick={() => { setCreateDraft(newDraft()); setCreating(true); }}
-              aria-label="Crea manualmente"
-              className="rounded-full flex items-center justify-center"
-              style={{ width: 44, height: 44, background: tokens.surface, border: `1px solid ${tokens.border}` }}
-            >
-              <Plus size={18} color={tokens.textPrimary} />
-            </button>
+            {/* nella vista To-do l'aggiunta avviene in linea nella lista */}
+            {agendaView !== "todo" && (
+              <button
+                onClick={() => { setCreateDraft(newDraft()); setCreating(true); }}
+                aria-label="Crea manualmente"
+                className="rounded-full flex items-center justify-center"
+                style={{ width: 44, height: 44, background: tokens.surface, border: `1px solid ${tokens.border}` }}
+              >
+                <Plus size={18} color={tokens.textPrimary} />
+              </button>
+            )}
             <VoiceCapture categories={categories} badges={badges} defaultReminderMinutes={settings.defaultReminderMinutes} onConfirm={handleVoiceConfirm} />
             <div style={{ width: 44 }} />
           </div>
@@ -278,6 +294,15 @@ export default function App() {
               badges={badges}
               onCancel={() => setCreating(false)}
               onSave={handleCreate}
+            />
+          )}
+
+          {todoDetail && (
+            <TodoSheet
+              todo={todoDetail}
+              onClose={() => setTodoDetail(null)}
+              onSave={async (id, patch) => { await store.updateItem(id, patch); setTodoDetail(null); await reload(); }}
+              onDelete={async (id) => { await store.deleteTodo(id); setTodoDetail(null); await reload(); }}
             />
           )}
 

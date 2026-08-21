@@ -34,7 +34,15 @@ export default function EventRow({ occ, Icon, color, badgeColor, timeFormat, tod
         {timeBox(occ, timeFormat)}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium truncate" style={{ color: tokens.textPrimary }}>{occ.title}</p>
+        <p
+          className="text-sm font-medium truncate"
+          style={{
+            color: occ.done ? tokens.textSecondary : tokens.textPrimary,
+            textDecoration: occ.done ? "line-through" : "none",
+          }}
+        >
+          {occ.title}
+        </p>
         <div className="flex items-center gap-2 mt-1.5 flex-wrap">
           <span className="flex items-center gap-1">
             <Icon size={11} color={color} />
