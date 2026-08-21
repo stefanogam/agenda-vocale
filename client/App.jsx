@@ -136,7 +136,7 @@ export default function App() {
     .sort((a, b) => a.occurrence_at.localeCompare(b.occurrence_at));
 
   return (
-    <div className="w-full min-h-screen flex flex-col" style={{ background: tokens.bg }}>
+    <div className="w-full min-h-screen flex flex-col overflow-x-hidden" style={{ background: tokens.bg }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
         .f-display { font-family: 'Fraunces', serif; } .f-body { font-family: 'Inter', sans-serif; } .f-mono { font-family: 'IBM Plex Mono', monospace; }
@@ -161,16 +161,16 @@ export default function App() {
             </div>
           </div>
 
-          <div className="flex gap-1.5 px-6 mb-3">
-            {[{ k: "lista", l: "Lista", i: List }, { k: "settimana", l: "Settimana", i: CalendarRange }, { k: "mese", l: "Mese", i: CalendarIcon }, { k: "radar", l: "Radar", i: Eye }].map(({ k, l, i: Ic }) => (
-              <button key={k} onClick={() => setAgendaView(k)} className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs f-mono" style={{ background: agendaView === k ? tokens.amber : tokens.surface, color: agendaView === k ? tokens.bg : tokens.textSecondary }}>
+          <div className="flex rounded-full p-1 mx-6 mb-3" style={{ background: tokens.surface }}>
+            {[{ k: "lista", l: "Lista", i: List }, { k: "settimana", l: "Sett.", i: CalendarRange }, { k: "mese", l: "Mese", i: CalendarIcon }, { k: "radar", l: "Radar", i: Eye }].map(({ k, l, i: Ic }) => (
+              <button key={k} onClick={() => setAgendaView(k)} className="flex-1 flex items-center justify-center gap-1 rounded-full py-1.5 text-xs f-mono" style={{ background: agendaView === k ? tokens.amber : "transparent", color: agendaView === k ? tokens.bg : tokens.textSecondary }}>
                 <Ic size={12} /> {l}
               </button>
             ))}
           </div>
 
           {agendaView === "lista" && (
-            <div className="flex-1 overflow-y-auto px-6 pb-32">
+            <div className="flex-1 overflow-y-auto px-6 pb-44">
               {nonRadar.length === 0 && (
                 <p className="text-xs text-center py-16" style={{ color: tokens.textSecondary }}>
                   Nessun appuntamento in programma. Tocca "+" per crearne uno.

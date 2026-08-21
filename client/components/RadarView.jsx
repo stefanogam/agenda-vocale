@@ -7,7 +7,7 @@ export default function RadarView({ items, catColor, catIcon, onOpen, onMarkChec
   const radarItems = items.filter((i) => i.type === "radar");
 
   return (
-    <div className="px-6 pb-32 flex-1 overflow-y-auto">
+    <div className="px-6 pb-44 flex-1 overflow-y-auto">
       <p className="text-xs mb-4 mt-2" style={{ color: tokens.textSecondary }}>
         Attività da tenere d'occhio, senza data fissa. Segna quando le controlli per tracciare l'ultima volta.
       </p>

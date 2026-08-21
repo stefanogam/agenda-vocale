@@ -27,7 +27,7 @@ export default function WeekView({ catColor, catIcon, badgeColor, settings, toda
   const countFor = (key) => occurrences.filter((o) => o.type !== "radar" && o.date === key).length;
 
   return (
-    <div className="px-6 pb-32 flex-1 overflow-y-auto">
+    <div className="px-6 pb-44 flex-1 overflow-y-auto">
       <div className="flex items-center justify-between mb-3 mt-2">
         <button onClick={() => { const d = new Date(anchor); d.setDate(d.getDate() - 7); setAnchor(d); }} aria-label="Settimana precedente" className="rounded-full p-1.5" style={{ background: tokens.surface }}><ChevronLeft size={14} color={tokens.textPrimary} /></button>
         <p className="f-mono text-xs" style={{ color: tokens.textSecondary }}>{MONTH_LONG[days[0].getMonth()]} {days[0].getFullYear()}</p>

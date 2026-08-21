@@ -107,7 +107,7 @@ export default function VoiceCapture({ categories, badges, settings, today, onCo
         )}
 
         {(phase === "listening" || phase === "processing") && (
-          <div className="rounded-full flex items-center gap-2 px-5 shadow-lg" style={{ height: 60, background: tokens.surface2, border: `1px solid ${tokens.border}`, minWidth: 250 }}>
+          <div className="rounded-full flex items-center gap-2 px-5 shadow-lg" style={{ height: 60, background: tokens.surface2, border: `1px solid ${tokens.border}`, width: "min(70vw, 260px)" }}>
             {phase === "listening" ? (
               <>
                 <span className="w-2.5 h-2.5 rounded-full animate-pulse" style={{ background: tokens.coral }} />

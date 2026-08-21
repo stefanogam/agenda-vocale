@@ -27,7 +27,7 @@ export default function MonthView({ catColor, catIcon, badgeColor, settings, tod
   const occsFor = (key) => occurrences.filter((o) => o.type !== "radar" && o.date === key);
 
   return (
-    <div className="px-6 pb-32 flex-1 overflow-y-auto">
+    <div className="px-6 pb-44 flex-1 overflow-y-auto">
       <div className="flex items-center justify-between mb-3 mt-2">
         <button onClick={() => { const d = new Date(anchor); d.setMonth(d.getMonth() - 1); setAnchor(d); }} aria-label="Mese precedente" className="rounded-full p-1.5" style={{ background: tokens.surface }}><ChevronLeft size={14} color={tokens.textPrimary} /></button>
         <p className="f-display text-sm" style={{ color: tokens.textPrimary }}>{MONTH_LONG[anchor.getMonth()]} {anchor.getFullYear()}</p>
