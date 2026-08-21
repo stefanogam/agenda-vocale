@@ -329,6 +329,7 @@ export default function App() {
             onAddCategory={async (c) => { await store.createCategory(c); await reload(); }}
             onAddBadge={async (b) => { await store.createBadge(b); await reload(); }}
             onUpdateSettings={async (patch) => { await store.updateSettings(patch); await reload(); }}
+            onDataRestored={reload}
           />
         </div>
       )}

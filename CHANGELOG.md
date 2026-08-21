@@ -6,6 +6,28 @@ Ogni modifica al progetto incrementa il numero di versione qui sotto e in
 - **MINOR** (0.X.0): nuove funzionalità che non rompono quelle esistenti
 - **MAJOR** (X.0.0): cambiamenti che rompono la compatibilità con l'uso precedente
 
+## [0.6.0] — 2026-08-21
+
+Scorrimento con il dito, backup, e correzione delle date.
+
+**Corretto** — le date slittavano indietro di un giorno
+- Un evento inserito per il 10 settembre veniva mostrato come 9 settembre,
+  e ad ogni modifica arretrava ancora (8, 7...). La causa: la data veniva
+  ricavata convertendo l'orario in formato universale, ma in Italia la
+  mezzanotte locale corrisponde alle 22:00 del giorno prima in UTC.
+  Ora date e orari si leggono sempre dai campi locali
+- **Nota**: gli eventi già inseriti con la data sbagliata restano tali —
+  vanno corretti a mano una volta. Da adesso in poi non slittano più
+
+**Nuovo**
+- **Scorrimento con il dito** nelle viste Mese e Settimana: da destra a
+  sinistra si va avanti, al contrario indietro. I movimenti verticali
+  (scorrere la pagina) vengono ignorati
+- **Backup**: in Impostazioni → Preferenze si può esportare tutto in un
+  file e reimportarlo. Serve sia come rete di sicurezza (i dati stanno
+  solo su questo dispositivo) sia per spostarli su un altro telefono.
+  Il ripristino sostituisce tutto e chiede conferma prima di procedere
+
 ## [0.5.0] — 2026-08-21
 
 Promemoria flessibili e modifica completa.

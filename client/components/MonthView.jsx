@@ -5,6 +5,7 @@ import { dateKey, parseKey, buildMonthGrid, diffDays, WEEKDAY_LONG, MONTH_LONG }
 import * as store from "../lib/store.js";
 import EventRow from "./EventRow.jsx";
 import PeriodNav from "./PeriodNav.jsx";
+import { useSwipe } from "../lib/use-swipe.js";
 
 const WEEKDAY_SHORT = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"];
 
@@ -31,12 +32,16 @@ export default function MonthView({ catColor, catIcon, badgeColor, settings, tod
     setAnchor(parseKey(key));
   }
 
+  const goPrev = () => { const d = new Date(anchor); d.setDate(1); d.setMonth(d.getMonth() - 1); setAnchor(d); };
+  const goNext = () => { const d = new Date(anchor); d.setDate(1); d.setMonth(d.getMonth() + 1); setAnchor(d); };
+  const swipe = useSwipe(goNext, goPrev);
+
   return (
     <div className="px-6 pb-44 flex-1 overflow-y-auto">
       <PeriodNav
         label={`${MONTH_LONG[anchor.getMonth()]} ${anchor.getFullYear()}`}
-        onPrev={() => { const d = new Date(anchor); d.setDate(1); d.setMonth(d.getMonth() - 1); setAnchor(d); }}
-        onNext={() => { const d = new Date(anchor); d.setDate(1); d.setMonth(d.getMonth() + 1); setAnchor(d); }}
+        onPrev={goPrev}
+        onNext={goNext}
         prevLabel="Mese precedente"
         nextLabel="Mese successivo"
         selectedKey={selectedKey}
@@ -44,6 +49,7 @@ export default function MonthView({ catColor, catIcon, badgeColor, settings, tod
         today={today}
       />
 
+      <div {...swipe}>
       <div className="grid grid-cols-7 gap-1 mb-1">
         {WEEKDAY_SHORT.map((w) => <p key={w} className="f-mono text-[9px] text-center uppercase" style={{ color: tokens.textSecondary }}>{w[0]}</p>)}
       </div>
@@ -65,6 +71,7 @@ export default function MonthView({ catColor, catIcon, badgeColor, settings, tod
             })}
           </div>
         ))}
+      </div>
       </div>
 
       <p className="f-mono text-[11px] uppercase tracking-wider mb-2.5" style={{ color: tokens.textSecondary }}>

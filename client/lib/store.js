@@ -163,18 +163,47 @@ export async function updateItemOccurrence(masterId, occurrenceAtISO, fields) {
 // eccezioni comprese.
 // ------------------------------------------------------------
 
+// Il fuso orario è la trappola classica qui. Un evento "10 settembre,
+// tutto il giorno" è mezzanotte LOCALE: convertito in orario universale
+// diventa il 9 settembre alle 22:00 in Italia, e prendendo i primi 10
+// caratteri della stringa ISO si perdeva un giorno ad ogni salvataggio.
+// Perciò: date e orari si ricavano sempre dai campi locali, mai da
+// toISOString(). E rrule.js lavora sui campi UTC, quindi gli passiamo
+// l'orario "da parete" travestito da UTC e lo riconvertiamo all'uscita.
+
+const pad = (n) => String(n).padStart(2, "0");
+
+function localDateKey(d) {
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+// Identifica un'occorrenza senza dipendere dal fuso: orario "da parete"
+function occurrenceKey(d) {
+  return `${localDateKey(d)}T${pad(d.getHours())}:${pad(d.getMinutes())}:00`;
+}
+
+function toUTCWall(d) {
+  return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), d.getHours(), d.getMinutes()));
+}
+function fromUTCWall(d) {
+  return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes());
+}
 function toRRuleDate(d) {
-  return d.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+  const u = toUTCWall(d);
+  return `${u.getUTCFullYear()}${pad(u.getUTCMonth() + 1)}${pad(u.getUTCDate())}T${pad(u.getUTCHours())}${pad(u.getUTCMinutes())}00Z`;
 }
 
 function rawOccurrences(item, from, to) {
   if (item.type === "radar" || !item.date) return [];
   const start = new Date(`${item.date}T${item.time ?? "00:00"}:00`);
   if (!item.rrule) return start >= from && start <= to ? [start] : [];
+
   const rule = RRule.fromString(`DTSTART:${toRRuleDate(start)}\nRRULE:${item.rrule}`);
   const until = item.recurrence_ends_at ? new Date(item.recurrence_ends_at) : to;
   const effectiveEnd = until < to ? until : to;
-  return rule.between(from, effectiveEnd, true);
+  return rule
+    .between(toUTCWall(from), toUTCWall(effectiveEnd), true)
+    .map(fromUTCWall);
 }
 
 // Restituisce le occorrenze "espanse" nell'intervallo, con le eccezioni
@@ -193,17 +222,17 @@ export async function getOccurrencesInRange(from, to) {
     const overrides = overridesByMaster.get(item.id) ?? [];
 
     for (const occAt of occurrences) {
-      const occAtISO = occAt.toISOString();
-      const override = overrides.find((o) => o.occurrence_at === occAtISO);
+      const key = occurrenceKey(occAt);
+      const override = overrides.find((o) => o.occurrence_at === key);
       if (override?.status === "cancelled") continue;
 
       result.push({
         ...item,
-        date: occAtISO.slice(0, 10),                 // data DI QUESTA occorrenza, non del primo verificarsi
-        time: item.time ? occAtISO.slice(11, 16) : null,
+        date: localDateKey(occAt),   // data DI QUESTA occorrenza, dai campi locali
+        time: item.time ? `${pad(occAt.getHours())}:${pad(occAt.getMinutes())}` : null,
         ...(override?.status === "modified" ? override : {}),
         id: item.id,               // l'id resta quello del master, sempre
-        occurrence_at: occAtISO,    // identifica QUALE occorrenza è
+        occurrence_at: key,         // identifica QUALE occorrenza è
         is_override: !!override,
       });
     }
@@ -251,4 +280,57 @@ export async function searchItems(query) {
   return items
     .filter((i) => i.title.toLowerCase().includes(q) || i.notes?.toLowerCase().includes(q))
     .sort((a, b) => a.title.toLowerCase().indexOf(q) - b.title.toLowerCase().indexOf(q));
+}
+
+// ------------------------------------------------------------
+// BACKUP — esporta e reimporta tutto
+//
+// I dati vivono solo su questo dispositivo: se disinstalli l'app, cambi
+// telefono o il sistema libera spazio, spariscono. Il backup è l'unica
+// rete di sicurezza, ed è anche il modo per spostare i dati su un altro
+// dispositivo.
+// ------------------------------------------------------------
+
+const BACKUP_FORMAT = 1;
+
+export async function exportBackup() {
+  const [items, categories, badges, overrides, settings] = await Promise.all([
+    db.getAll("items"),
+    db.getAll("categories"),
+    db.getAll("badges"),
+    db.getAll("item_overrides"),
+    getSettings(),
+  ]);
+  return {
+    format: BACKUP_FORMAT,
+    exported_at: new Date().toISOString(),
+    counts: { items: items.length, categories: categories.length, badges: badges.length },
+    data: { items, categories, badges, item_overrides: overrides, settings },
+  };
+}
+
+// Sostituisce integralmente il contenuto: è un ripristino, non una fusione.
+// Chi chiama deve aver già chiesto conferma all'utente.
+export async function importBackup(backup) {
+  if (!backup || typeof backup !== "object" || !backup.data) {
+    throw new Error("File non riconosciuto: non sembra un backup di questa app.");
+  }
+  if (backup.format !== BACKUP_FORMAT) {
+    throw new Error(`Formato di backup non compatibile (versione ${backup.format ?? "sconosciuta"}).`);
+  }
+  const { items = [], categories = [], badges = [], item_overrides = [], settings } = backup.data;
+  if (!Array.isArray(items) || !Array.isArray(categories)) {
+    throw new Error("Il file di backup è danneggiato o incompleto.");
+  }
+
+  for (const name of ["items", "categories", "badges", "item_overrides"]) {
+    await db.clear(name);
+  }
+  for (const c of categories) await db.put("categories", c);
+  for (const b of badges) await db.put("badges", b);
+  for (const i of items) await db.put("items", i);
+  for (const o of item_overrides) await db.put("item_overrides", o);
+  if (settings) await db.put("settings", { ...settings, key: "user-settings" });
+
+  return { items: items.length, categories: categories.length, badges: badges.length };
 }

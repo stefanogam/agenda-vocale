@@ -1,15 +1,55 @@
 // client/components/ManageScreen.jsx
-import { useState } from "react";
-import { ArrowLeft, Star } from "lucide-react";
+import { useState, useRef } from "react";
+import { ArrowLeft, Star, Download, Upload } from "lucide-react";
 import { tokens, SWATCHES, REMINDER_OPTIONS, reminderLabel } from "../lib/tokens.js";
 import { ICONS, ICON_KEYS } from "../lib/icons.js";
 import { FormCard, AddButton } from "./ui.jsx";
 import { APP_VERSION } from "../lib/version.js";
+import * as store from "../lib/store.js";
 
 const TIMEZONES = ["Europe/Rome", "Europe/London", "America/New_York", "America/Los_Angeles", "Asia/Tokyo", "UTC"];
 
-export default function ManageScreen({ onBack, categories, badges, settings, onAddCategory, onAddBadge, onUpdateSettings }) {
+export default function ManageScreen({ onBack, categories, badges, settings, onAddCategory, onAddBadge, onUpdateSettings, onDataRestored }) {
   const [tab, setTab] = useState("categorie");
+  const [backupMsg, setBackupMsg] = useState(null);
+  const fileRef = useRef(null);
+
+  async function handleExport() {
+    try {
+      const backup = await store.exportBackup();
+      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `agenda-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setBackupMsg({ ok: true, text: `Salvati ${backup.counts.items} elementi.` });
+    } catch (err) {
+      setBackupMsg({ ok: false, text: `Esportazione fallita: ${err.message}` });
+    }
+  }
+
+  async function handleImportFile(e) {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // permette di riselezionare lo stesso file
+    if (!file) return;
+    try {
+      const backup = JSON.parse(await file.text());
+      const n = backup?.counts?.items ?? backup?.data?.items?.length ?? "?";
+      const conferma = window.confirm(
+        `Stai per ripristinare ${n} elementi da questo backup.\n\n` +
+        "TUTTI i dati attualmente sull'app verranno sostituiti. L'operazione non è annullabile.\n\nProcedere?"
+      );
+      if (!conferma) return;
+      const res = await store.importBackup(backup);
+      setBackupMsg({ ok: true, text: `Ripristinati ${res.items} elementi, ${res.categories} categorie.` });
+      onDataRestored?.();
+    } catch (err) {
+      setBackupMsg({ ok: false, text: err.message });
+    }
+  }
+
   const [catForm, setCatForm] = useState(null);
   const [badgeForm, setBadgeForm] = useState(null);
 
@@ -85,6 +125,26 @@ export default function ManageScreen({ onBack, categories, badges, settings, onA
           </div>
 
           <div className="mt-8 pt-4" style={{ borderTop: `1px solid ${tokens.border}` }}>
+            <p className="f-mono text-[10px] uppercase tracking-wider mb-2" style={{ color: tokens.textSecondary }}>Backup</p>
+            <p className="text-xs mb-3" style={{ color: tokens.textSecondary }}>
+              I dati stanno solo su questo dispositivo. Salva un backup ogni tanto: serve
+              anche per spostare tutto su un altro telefono.
+            </p>
+            <div className="flex gap-2 mb-2">
+              <button onClick={handleExport} className="flex-1 rounded-xl py-2.5 flex items-center justify-center gap-2 text-xs f-mono" style={{ background: tokens.surface, border: `1px solid ${tokens.border}`, color: tokens.textPrimary }}>
+                <Download size={14} /> Esporta
+              </button>
+              <button onClick={() => fileRef.current?.click()} className="flex-1 rounded-xl py-2.5 flex items-center justify-center gap-2 text-xs f-mono" style={{ background: tokens.surface, border: `1px solid ${tokens.border}`, color: tokens.textPrimary }}>
+                <Upload size={14} /> Importa
+              </button>
+              <input ref={fileRef} type="file" accept="application/json,.json" onChange={handleImportFile} className="hidden" />
+            </div>
+            {backupMsg && (
+              <p className="text-xs mb-2" style={{ color: backupMsg.ok ? tokens.sage : tokens.coral }}>{backupMsg.text}</p>
+            )}
+          </div>
+
+          <div className="mt-6 pt-4" style={{ borderTop: `1px solid ${tokens.border}` }}>
             <p className="f-mono text-[10px]" style={{ color: tokens.textSecondary }}>
               Versione installata: <span style={{ color: tokens.amber }}>v{APP_VERSION}</span>
             </p>

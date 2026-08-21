@@ -5,6 +5,7 @@ import { dateKey, parseKey, weekDatesFor, diffDays, isoWeekNumber, WEEKDAY_LONG,
 import * as store from "../lib/store.js";
 import EventRow from "./EventRow.jsx";
 import PeriodNav from "./PeriodNav.jsx";
+import { useSwipe } from "../lib/use-swipe.js";
 
 const WEEKDAY_SHORT = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"];
 
@@ -31,13 +32,17 @@ export default function WeekView({ catColor, catIcon, badgeColor, settings, toda
     setAnchor(parseKey(key));
   }
 
+  const goPrev = () => { const d = new Date(anchor); d.setDate(d.getDate() - 7); setAnchor(d); };
+  const goNext = () => { const d = new Date(anchor); d.setDate(d.getDate() + 7); setAnchor(d); };
+  const swipe = useSwipe(goNext, goPrev);
+
   return (
     <div className="px-6 pb-44 flex-1 overflow-y-auto">
       <PeriodNav
         label={`${MONTH_LONG[days[0].getMonth()]} ${days[0].getFullYear()}`}
         badge={`WK:${String(isoWeekNumber(days[0])).padStart(2, "0")}`}
-        onPrev={() => { const d = new Date(anchor); d.setDate(d.getDate() - 7); setAnchor(d); }}
-        onNext={() => { const d = new Date(anchor); d.setDate(d.getDate() + 7); setAnchor(d); }}
+        onPrev={goPrev}
+        onNext={goNext}
         prevLabel="Settimana precedente"
         nextLabel="Settimana successiva"
         selectedKey={selectedKey}
@@ -45,7 +50,7 @@ export default function WeekView({ catColor, catIcon, badgeColor, settings, toda
         today={today}
       />
 
-      <div className="grid grid-cols-7 gap-1.5 mb-5">
+      <div {...swipe} className="grid grid-cols-7 gap-1.5 mb-5">
         {days.map((d) => {
           const key = dateKey(d);
           const isToday = diffDays(d, today) === 0;

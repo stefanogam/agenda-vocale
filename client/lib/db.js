@@ -99,3 +99,12 @@ export async function removeByIndex(storeName, indexName, value) {
 export function newId() {
   return crypto.randomUUID();
 }
+
+export async function clear(storeName) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const t = db.transaction(storeName, "readwrite").objectStore(storeName).clear();
+    t.onsuccess = () => resolve();
+    t.onerror = () => reject(t.error);
+  });
+}
