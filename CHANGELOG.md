@@ -6,6 +6,29 @@ Ogni modifica al progetto incrementa il numero di versione qui sotto e in
 - **MINOR** (0.X.0): nuove funzionalità che non rompono quelle esistenti
 - **MAJOR** (X.0.0): cambiamenti che rompono la compatibilità con l'uso precedente
 
+## [0.1.1] — 2026-08-21
+
+Rimosso Mistral, tornati a solo Anthropic.
+
+- Il microfono usa di nuovo solo la Web Speech API del browser (gratis)
+  per trascrivere, e Claude per interpretare — architettura più semplice,
+  una sola chiave API da gestire
+- Rimossa la registrazione audio con MediaRecorder e la chiamata a Mistral
+
+## [0.1.0] — 2026-08-21
+
+Nuova funzionalità: trascrizione vocale con Mistral.
+
+- Sostituita la sola Web Speech API con un doppio sistema: il
+  riconoscimento del browser mostra le parole dal vivo mentre parli
+  (solo visivo), ma l'audio viene registrato e trascritto per davvero
+  da **Mistral (Voxtral)** — più accurato, ed è il testo che arriva
+  a Claude
+- Richiede una nuova chiave: `MISTRAL_API_KEY` (vedi README)
+- Effetto collaterale positivo: funziona anche su Firefox, che non
+  supporta il riconoscimento vocale del browser ma supporta comunque
+  la registrazione audio
+
 ## [0.0.3] — 2026-08-08
 
 Correzione.
