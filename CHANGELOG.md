@@ -6,6 +6,21 @@ Ogni modifica al progetto incrementa il numero di versione qui sotto e in
 - **MINOR** (0.X.0): nuove funzionalità che non rompono quelle esistenti
 - **MAJOR** (X.0.0): cambiamenti che rompono la compatibilità con l'uso precedente
 
+## [0.2.0] — 2026-08-21
+
+Miglioramenti alle viste calendario.
+
+- Il pulsante "+" ora crea l'evento nel **giorno selezionato** quando sei
+  in vista Settimana o Mese (prima partiva sempre da oggi). In Lista e
+  Radar resta oggi, dato che lì non c'è un giorno selezionato
+- Nuovo pulsante **"Oggi"** per tornare alla data corrente da qualsiasi
+  punto del calendario
+- **Toccando il nome del mese** si apre il calendario del telefono per
+  saltare direttamente a una data specifica
+- Corretto un difetto nel cambio mese: partendo da un giorno 29–31,
+  passare al mese precedente/successivo poteva far saltare un mese
+  (es. dal 31 marzo si finiva in marzo invece che in febbraio)
+
 ## [0.1.1] — 2026-08-21
 
 Rimosso Mistral, tornati a solo Anthropic.

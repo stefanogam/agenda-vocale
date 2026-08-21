@@ -1,16 +1,14 @@
 // client/components/MonthView.jsx
 import { useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { tokens } from "../lib/tokens.js";
 import { dateKey, parseKey, buildMonthGrid, diffDays, WEEKDAY_LONG, MONTH_LONG } from "../lib/date-utils.js";
 import * as store from "../lib/store.js";
 import EventRow from "./EventRow.jsx";
+import PeriodNav from "./PeriodNav.jsx";
 
 const WEEKDAY_SHORT = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"];
 
-export default function MonthView({ catColor, catIcon, badgeColor, settings, today, onOpen }) {
-  const [anchor, setAnchor] = useState(today);
-  const [selectedKey, setSelectedKey] = useState(dateKey(today));
+export default function MonthView({ catColor, catIcon, badgeColor, settings, today, selectedKey, setSelectedKey, anchor, setAnchor, onOpen }) {
   const [occurrences, setOccurrences] = useState([]);
   const weeks = buildMonthGrid(anchor.getFullYear(), anchor.getMonth());
 
@@ -26,13 +24,25 @@ export default function MonthView({ catColor, catIcon, badgeColor, settings, tod
   const dayOccurrences = occurrences.filter((o) => o.type !== "radar" && o.date === selectedKey);
   const occsFor = (key) => occurrences.filter((o) => o.type !== "radar" && o.date === key);
 
+  // Scegliendo una data (dal calendario nativo o da "Oggi") salta anche
+  // al mese che la contiene, non solo alla selezione del giorno.
+  function pickDate(key) {
+    setSelectedKey(key);
+    setAnchor(parseKey(key));
+  }
+
   return (
     <div className="px-6 pb-44 flex-1 overflow-y-auto">
-      <div className="flex items-center justify-between mb-3 mt-2">
-        <button onClick={() => { const d = new Date(anchor); d.setMonth(d.getMonth() - 1); setAnchor(d); }} aria-label="Mese precedente" className="rounded-full p-1.5" style={{ background: tokens.surface }}><ChevronLeft size={14} color={tokens.textPrimary} /></button>
-        <p className="f-display text-sm" style={{ color: tokens.textPrimary }}>{MONTH_LONG[anchor.getMonth()]} {anchor.getFullYear()}</p>
-        <button onClick={() => { const d = new Date(anchor); d.setMonth(d.getMonth() + 1); setAnchor(d); }} aria-label="Mese successivo" className="rounded-full p-1.5" style={{ background: tokens.surface }}><ChevronRight size={14} color={tokens.textPrimary} /></button>
-      </div>
+      <PeriodNav
+        label={`${MONTH_LONG[anchor.getMonth()]} ${anchor.getFullYear()}`}
+        onPrev={() => { const d = new Date(anchor); d.setDate(1); d.setMonth(d.getMonth() - 1); setAnchor(d); }}
+        onNext={() => { const d = new Date(anchor); d.setDate(1); d.setMonth(d.getMonth() + 1); setAnchor(d); }}
+        prevLabel="Mese precedente"
+        nextLabel="Mese successivo"
+        selectedKey={selectedKey}
+        onPickDate={pickDate}
+        today={today}
+      />
 
       <div className="grid grid-cols-7 gap-1 mb-1">
         {WEEKDAY_SHORT.map((w) => <p key={w} className="f-mono text-[9px] text-center uppercase" style={{ color: tokens.textSecondary }}>{w[0]}</p>)}

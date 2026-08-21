@@ -4,6 +4,7 @@ import { Bell, Plus, CalendarDays, Settings as SettingsIcon, Star, List, Calenda
 import { tokens, SWATCHES } from "./lib/tokens.js";
 import { ICONS } from "./lib/icons.js";
 import * as store from "./lib/store.js";
+import { dateKey } from "./lib/date-utils.js";
 import { registerServiceWorker } from "./pwa.js";
 import { startReminderLoop, requestNotificationPermission } from "./reminders.js";
 import CreateSheet, { emptyDraft } from "./components/CreateSheet.jsx";
@@ -30,6 +31,12 @@ export default function App() {
 
   const [screen, setScreen] = useState("agenda");
   const [agendaView, setAgendaView] = useState("lista");
+  // Giorno selezionato e periodo visualizzato: stanno qui e non dentro le
+  // viste perché servono anche al pulsante "+" (per creare l'evento nel
+  // giorno che stai guardando, non sempre oggi).
+  const [selectedKey, setSelectedKey] = useState(() => dateKey(new Date()));
+  const [weekAnchor, setWeekAnchor] = useState(() => new Date());
+  const [monthAnchor, setMonthAnchor] = useState(() => new Date());
   const [creating, setCreating] = useState(false);
   const [createDraft, setCreateDraft] = useState(null);
   const [detail, setDetail] = useState(null); // { occ, isRadar } | null
@@ -69,6 +76,14 @@ export default function App() {
   function catColor(name) { return categories.find((c) => c.name === name)?.color || tokens.textSecondary; }
   function catIcon(name) { return ICONS[categories.find((c) => c.name === name)?.icon] || Star; }
   function badgeColor(name) { return badges.find((b) => b.name === name)?.color || tokens.textSecondary; }
+
+  // Nelle viste calendario il "+" crea l'evento nel giorno che stai
+  // guardando; in Lista e Radar non c'è un giorno selezionato, quindi oggi.
+  function newDraft(extra = {}) {
+    const base = emptyDraft(categories, settings.defaultReminderMinutes, today);
+    const useSelected = agendaView === "settimana" || agendaView === "mese";
+    return { ...base, ...(useSelected ? { dateKey: selectedKey } : {}), ...extra };
+  }
 
   async function handleCreate(itemData) {
     await store.createItem(itemData);
@@ -193,11 +208,21 @@ export default function App() {
           )}
 
           {agendaView === "settimana" && (
-            <WeekView catColor={catColor} catIcon={catIcon} badgeColor={badgeColor} settings={settings} today={today} onOpen={(o) => setDetail({ occ: o, isRadar: false })} />
+            <WeekView
+              catColor={catColor} catIcon={catIcon} badgeColor={badgeColor} settings={settings} today={today}
+              selectedKey={selectedKey} setSelectedKey={setSelectedKey}
+              anchor={weekAnchor} setAnchor={setWeekAnchor}
+              onOpen={(o) => setDetail({ occ: o, isRadar: false })}
+            />
           )}
 
           {agendaView === "mese" && (
-            <MonthView catColor={catColor} catIcon={catIcon} badgeColor={badgeColor} settings={settings} today={today} onOpen={(o) => setDetail({ occ: o, isRadar: false })} />
+            <MonthView
+              catColor={catColor} catIcon={catIcon} badgeColor={badgeColor} settings={settings} today={today}
+              selectedKey={selectedKey} setSelectedKey={setSelectedKey}
+              anchor={monthAnchor} setAnchor={setMonthAnchor}
+              onOpen={(o) => setDetail({ occ: o, isRadar: false })}
+            />
           )}
 
           {agendaView === "radar" && (
@@ -207,13 +232,13 @@ export default function App() {
               catIcon={catIcon}
               onOpen={(r) => setDetail({ occ: r, isRadar: true })}
               onMarkChecked={handleMarkChecked}
-              onNew={() => { setCreateDraft({ ...emptyDraft(categories, settings.defaultReminderMinutes, today), type: "radar" }); setCreating(true); }}
+              onNew={() => { setCreateDraft(newDraft({ type: "radar" })); setCreating(true); }}
             />
           )}
 
           <div className="absolute left-0 right-0 flex items-center justify-center gap-3" style={{ bottom: 96 }}>
             <button
-              onClick={() => { setCreateDraft(emptyDraft(categories, settings.defaultReminderMinutes, today)); setCreating(true); }}
+              onClick={() => { setCreateDraft(newDraft()); setCreating(true); }}
               aria-label="Crea manualmente"
               className="rounded-full flex items-center justify-center"
               style={{ width: 44, height: 44, background: tokens.surface, border: `1px solid ${tokens.border}` }}

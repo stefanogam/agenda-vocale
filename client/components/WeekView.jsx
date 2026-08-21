@@ -1,16 +1,14 @@
 // client/components/WeekView.jsx
 import { useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { tokens } from "../lib/tokens.js";
 import { dateKey, parseKey, weekDatesFor, diffDays, WEEKDAY_LONG, MONTH_LONG } from "../lib/date-utils.js";
 import * as store from "../lib/store.js";
 import EventRow from "./EventRow.jsx";
+import PeriodNav from "./PeriodNav.jsx";
 
 const WEEKDAY_SHORT = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"];
 
-export default function WeekView({ catColor, catIcon, badgeColor, settings, today, onOpen }) {
-  const [anchor, setAnchor] = useState(today);
-  const [selectedKey, setSelectedKey] = useState(dateKey(today));
+export default function WeekView({ catColor, catIcon, badgeColor, settings, today, selectedKey, setSelectedKey, anchor, setAnchor, onOpen }) {
   const [occurrences, setOccurrences] = useState([]);
   const days = weekDatesFor(anchor);
 
@@ -26,13 +24,25 @@ export default function WeekView({ catColor, catIcon, badgeColor, settings, toda
   const dayOccurrences = occurrences.filter((o) => o.type !== "radar" && o.date === selectedKey);
   const countFor = (key) => occurrences.filter((o) => o.type !== "radar" && o.date === key).length;
 
+  // Scegliendo una data (dal calendario nativo o da "Oggi") salta anche
+  // alla settimana che la contiene, non solo alla selezione del giorno.
+  function pickDate(key) {
+    setSelectedKey(key);
+    setAnchor(parseKey(key));
+  }
+
   return (
     <div className="px-6 pb-44 flex-1 overflow-y-auto">
-      <div className="flex items-center justify-between mb-3 mt-2">
-        <button onClick={() => { const d = new Date(anchor); d.setDate(d.getDate() - 7); setAnchor(d); }} aria-label="Settimana precedente" className="rounded-full p-1.5" style={{ background: tokens.surface }}><ChevronLeft size={14} color={tokens.textPrimary} /></button>
-        <p className="f-mono text-xs" style={{ color: tokens.textSecondary }}>{MONTH_LONG[days[0].getMonth()]} {days[0].getFullYear()}</p>
-        <button onClick={() => { const d = new Date(anchor); d.setDate(d.getDate() + 7); setAnchor(d); }} aria-label="Settimana successiva" className="rounded-full p-1.5" style={{ background: tokens.surface }}><ChevronRight size={14} color={tokens.textPrimary} /></button>
-      </div>
+      <PeriodNav
+        label={`${MONTH_LONG[days[0].getMonth()]} ${days[0].getFullYear()}`}
+        onPrev={() => { const d = new Date(anchor); d.setDate(d.getDate() - 7); setAnchor(d); }}
+        onNext={() => { const d = new Date(anchor); d.setDate(d.getDate() + 7); setAnchor(d); }}
+        prevLabel="Settimana precedente"
+        nextLabel="Settimana successiva"
+        selectedKey={selectedKey}
+        onPickDate={pickDate}
+        today={today}
+      />
 
       <div className="grid grid-cols-7 gap-1.5 mb-5">
         {days.map((d) => {
