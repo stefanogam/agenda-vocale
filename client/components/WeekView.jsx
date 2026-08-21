@@ -1,7 +1,7 @@
 // client/components/WeekView.jsx
 import { useState, useEffect } from "react";
 import { tokens } from "../lib/tokens.js";
-import { dateKey, parseKey, weekDatesFor, diffDays, WEEKDAY_LONG, MONTH_LONG } from "../lib/date-utils.js";
+import { dateKey, parseKey, weekDatesFor, diffDays, isoWeekNumber, WEEKDAY_LONG, MONTH_LONG } from "../lib/date-utils.js";
 import * as store from "../lib/store.js";
 import EventRow from "./EventRow.jsx";
 import PeriodNav from "./PeriodNav.jsx";
@@ -35,6 +35,7 @@ export default function WeekView({ catColor, catIcon, badgeColor, settings, toda
     <div className="px-6 pb-44 flex-1 overflow-y-auto">
       <PeriodNav
         label={`${MONTH_LONG[days[0].getMonth()]} ${days[0].getFullYear()}`}
+        badge={`WK:${String(isoWeekNumber(days[0])).padStart(2, "0")}`}
         onPrev={() => { const d = new Date(anchor); d.setDate(d.getDate() - 7); setAnchor(d); }}
         onNext={() => { const d = new Date(anchor); d.setDate(d.getDate() + 7); setAnchor(d); }}
         prevLabel="Settimana precedente"

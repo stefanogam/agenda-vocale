@@ -5,6 +5,7 @@ import { tokens, SWATCHES } from "./lib/tokens.js";
 import { ICONS } from "./lib/icons.js";
 import * as store from "./lib/store.js";
 import { dateKey } from "./lib/date-utils.js";
+import { APP_VERSION } from "./lib/version.js";
 import { registerServiceWorker } from "./pwa.js";
 import { startReminderLoop, requestNotificationPermission } from "./reminders.js";
 import CreateSheet, { emptyDraft } from "./components/CreateSheet.jsx";
@@ -30,7 +31,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
 
   const [screen, setScreen] = useState("agenda");
-  const [agendaView, setAgendaView] = useState("lista");
+  const [agendaView, setAgendaView] = useState("mese");
   // Giorno selezionato e periodo visualizzato: stanno qui e non dentro le
   // viste perché servono anche al pulsante "+" (per creare l'evento nel
   // giorno che stai guardando, non sempre oggi).
@@ -161,7 +162,9 @@ export default function App() {
         <div className="relative flex-1 flex flex-col f-body">
           <div className="px-6 pt-9 pb-4 flex items-start justify-between">
             <div>
-              <p className="text-xs tracking-widest uppercase" style={{ color: tokens.textSecondary }}>Agenda</p>
+              <p className="text-xs tracking-widest uppercase" style={{ color: tokens.textSecondary }}>
+                Agenda <span className="f-mono normal-case tracking-normal" style={{ color: tokens.amber }}>v{APP_VERSION}</span>
+              </p>
               <h1 className="f-display text-2xl mt-1" style={{ color: tokens.textPrimary }}>
                 {today.toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" })}
               </h1>
@@ -177,7 +180,7 @@ export default function App() {
           </div>
 
           <div className="flex rounded-full p-1 mx-6 mb-3" style={{ background: tokens.surface }}>
-            {[{ k: "lista", l: "Lista", i: List }, { k: "settimana", l: "Sett.", i: CalendarRange }, { k: "mese", l: "Mese", i: CalendarIcon }, { k: "radar", l: "Radar", i: Eye }].map(({ k, l, i: Ic }) => (
+            {[{ k: "mese", l: "Mese", i: CalendarIcon }, { k: "lista", l: "Lista", i: List }, { k: "settimana", l: "Sett.", i: CalendarRange }, { k: "radar", l: "Radar", i: Eye }].map(({ k, l, i: Ic }) => (
               <button key={k} onClick={() => setAgendaView(k)} className="flex-1 flex items-center justify-center gap-1 rounded-full py-1.5 text-xs f-mono" style={{ background: agendaView === k ? tokens.amber : "transparent", color: agendaView === k ? tokens.bg : tokens.textSecondary }}>
                 <Ic size={12} /> {l}
               </button>

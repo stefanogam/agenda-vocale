@@ -6,7 +6,7 @@ import { dateKey, parseKey, diffDays } from "../lib/date-utils.js";
 // Barra usata da WeekView e MonthView: frecce avanti/indietro, titolo
 // cliccabile che apre il selettore data del telefono, e "Oggi" che
 // riporta tutto alla data corrente.
-export default function PeriodNav({ label, onPrev, onNext, selectedKey, onPickDate, today, prevLabel, nextLabel }) {
+export default function PeriodNav({ label, badge, onPrev, onNext, selectedKey, onPickDate, today, prevLabel, nextLabel }) {
   const isOnToday = diffDays(parseKey(selectedKey), today) === 0;
 
   return (
@@ -28,6 +28,12 @@ export default function PeriodNav({ label, onPrev, onNext, selectedKey, onPickDa
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
         />
       </div>
+
+      {badge && (
+        <span className="f-mono text-[10px] rounded-full px-2 py-1 shrink-0" style={{ background: tokens.surface2, color: tokens.textSecondary }}>
+          {badge}
+        </span>
+      )}
 
       <button
         onClick={() => onPickDate(dateKey(today))}

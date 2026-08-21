@@ -50,6 +50,17 @@ export function buildListaGroups(events, today) {
   return Array.from(map.entries()).map(([label, items]) => ({ label, items }));
 }
 
+// Numero di settimana secondo lo standard ISO 8601 (quello usato in
+// Italia e in Europa): la settimana inizia di lunedì, e la settimana 1
+// è quella che contiene il primo giovedì dell'anno.
+export function isoWeekNumber(d) {
+  const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNum = t.getUTCDay() || 7; // domenica = 7, non 0
+  t.setUTCDate(t.getUTCDate() + 4 - dayNum); // vai al giovedì di quella settimana
+  const yearStart = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+  return Math.ceil(((t - yearStart) / 86400000 + 1) / 7);
+}
+
 export function weekDatesFor(anchor) {
   const dow = (anchor.getDay() + 6) % 7; // 0 = lunedì
   const monday = new Date(anchor);

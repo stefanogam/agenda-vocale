@@ -4,6 +4,7 @@ import { ArrowLeft, Star } from "lucide-react";
 import { tokens, SWATCHES, REMINDER_OPTIONS, reminderLabel } from "../lib/tokens.js";
 import { ICONS, ICON_KEYS } from "../lib/icons.js";
 import { FormCard, AddButton } from "./ui.jsx";
+import { APP_VERSION } from "../lib/version.js";
 
 const TIMEZONES = ["Europe/Rome", "Europe/London", "America/New_York", "America/Los_Angeles", "Asia/Tokyo", "UTC"];
 
@@ -81,6 +82,12 @@ export default function ManageScreen({ onBack, categories, badges, settings, onA
             {REMINDER_OPTIONS.map((min) => (
               <button key={min} onClick={() => onUpdateSettings({ defaultReminderMinutes: min })} className="f-mono text-[10px] rounded-full px-3 py-1.5" style={{ background: settings.defaultReminderMinutes === min ? tokens.amber : tokens.surface, color: settings.defaultReminderMinutes === min ? tokens.bg : tokens.textSecondary, border: `1px solid ${settings.defaultReminderMinutes === min ? tokens.amber : tokens.border}` }}>{reminderLabel(min)}</button>
             ))}
+          </div>
+
+          <div className="mt-8 pt-4" style={{ borderTop: `1px solid ${tokens.border}` }}>
+            <p className="f-mono text-[10px]" style={{ color: tokens.textSecondary }}>
+              Versione installata: <span style={{ color: tokens.amber }}>v{APP_VERSION}</span>
+            </p>
           </div>
         </>
       )}

@@ -6,6 +6,20 @@ Ogni modifica al progetto incrementa il numero di versione qui sotto e in
 - **MINOR** (0.X.0): nuove funzionalità che non rompono quelle esistenti
 - **MAJOR** (X.0.0): cambiamenti che rompono la compatibilità con l'uso precedente
 
+## [0.3.0] — 2026-08-21
+
+Numero di versione visibile e riordino delle viste.
+
+- La **versione è ora mostrata nell'app**: accanto alla scritta "Agenda"
+  in alto, e in Impostazioni → Preferenze. Serve a verificare a colpo
+  d'occhio che il rilascio sia arrivato davvero sul telefono (se il
+  numero non cambia dopo un aggiornamento, stai vedendo la cache vecchia)
+- Il numero viene letto automaticamente da `package.json` in fase di
+  build: non può disallinearsi da quello reale del rilascio
+- Viste riordinate: **Mese** (ora predefinita), Lista, Settimana, Radar
+- Nella vista settimanale, accanto al mese, il **numero di settimana**
+  ISO 8601 (`WK:XX`) — lo stesso standard usato in Italia
+
 ## [0.2.0] — 2026-08-21
 
 Miglioramenti alle viste calendario.
