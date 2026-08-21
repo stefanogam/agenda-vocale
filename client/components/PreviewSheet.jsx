@@ -4,7 +4,8 @@ import { Check, X, Star } from "lucide-react";
 import { tokens, REMINDER_OPTIONS, reminderLabel } from "../lib/tokens.js";
 import { ICONS } from "../lib/icons.js";
 
-// `extraction` arriva da /api/voice-extract: { title, type, category,
+// `extraction` arriva dall'interprete locale (lib/parse-italian.js):
+// { title, type, category,
 // all_day, start_at, rrule, badges, notes, confidence, transcript }
 export default function PreviewSheet({ extraction, categories, badges, onCancel, onConfirm }) {
   const startDate = extraction.start_at ? new Date(extraction.start_at) : new Date();

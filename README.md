@@ -14,11 +14,9 @@ complessità possibile; un percorso di upgrade verso un vero backend
 è già progettato e pronto in [`future-upgrade/`](./future-upgrade),
 non collegato a questa versione.
 
-L'unica eccezione è la voce: capire un comando vocale richiede una
-chiamata a un modello AI (Claude), e la chiave per farlo non può stare
-nel codice del browser. Per questo un'unica funzione serverless
-([`api/voice-extract.js`](./api/voice-extract.js)) fa da tramite sicuro —
-il resto dell'app non tocca mai un server.
+Anche la voce è interamente locale: il browser trascrive, e un
+interprete scritto su misura per l'italiano ricava data, ora e ricorrenza
+dalla frase. L'app non contatta nessun server, mai.
 
 ```
 ├── index.html              punto di ingresso
@@ -28,8 +26,6 @@ il resto dell'app non tocca mai un server.
 │   ├── components/           schermate e componenti UI
 │   ├── lib/                  store dati (IndexedDB), date, ricorrenza
 │   └── __tests__/             unit test
-├── api/
-│   └── voice-extract.js     unica funzione serverless (Vercel)
 ├── public/                 manifest, service worker, icone
 ├── e2e/                    test end-to-end (Playwright)
 └── future-upgrade/         progettazione completa per l'upgrade a
@@ -44,34 +40,33 @@ npm install
 npm run dev
 ```
 
-Apri `http://localhost:5173`. La voce non funzionerà finché non configuri
-anche `/api/voice-extract` (vedi sotto) — il resto dell'app sì.
+Apri `http://localhost:5173`. Funziona tutto, voce compresa: non c'è
+niente da configurare.
 
-## Configurare la voce
+## La voce
 
-1. Crea una chiave API su [console.anthropic.com](https://console.anthropic.com)
-2. In locale: installa la [Vercel CLI](https://vercel.com/docs/cli)
-   (`npm i -g vercel`) e lancia `vercel dev` invece di `npm run dev` — fa
-   girare anche `/api/voice-extract` in locale. Serve un file `.env.local`
-   con:
-   ```
-   ANTHROPIC_API_KEY=sk-ant-...
-   ```
-3. In produzione (Vercel): Project Settings → Environment Variables →
-   aggiungi `ANTHROPIC_API_KEY` lì.
+Non serve nessuna chiave API, nessun account e nessun costo: funziona
+tutto sul dispositivo.
 
-Il riconoscimento vocale (speech-to-text) usa la Web Speech API del
-browser — gratis, nessuna configurazione, ma disponibile solo su
-Chrome/Edge/Safari recenti (non su Firefox). Se il browser non la
-supporta, il pulsante del microfono lo segnala e resta comunque
-disponibile la creazione manuale.
+- **Trascrizione**: la Web Speech API del browser converte la voce in
+  testo. Gratis, ma disponibile solo su Chrome/Edge/Safari recenti (non
+  su Firefox). Se manca, il pulsante lo segnala e resta la creazione manuale.
+- **Interpretazione**: [`client/lib/parse-italian.js`](./client/lib/parse-italian.js)
+  riconosce le espressioni italiane comuni — *"domani alle 15"*,
+  *"martedì alle tre"*, *"ogni lunedì"*, *"tra due settimane"*,
+  *"entro il 30 agosto"*, *"ogni tanto"* — e ne ricava data, ora,
+  ricorrenza, tipo, categoria e badge.
+
+Il testo non esce mai dal telefono. Quando l'interprete non capisce, lo
+dice invece di indovinare: la scheda di conferma è comunque sempre
+modificabile a mano prima di salvare.
 
 ## Deploy
 
 Collega il repository a [Vercel](https://vercel.com) (New Project →
-Import Git Repository). Vercel rileva automaticamente Vite e la cartella
-`api/`, senza configurazione aggiuntiva a parte la variabile d'ambiente
-`ANTHROPIC_API_KEY`. Ogni push su `main` fa deploy da solo.
+Import Git Repository). Vercel rileva automaticamente Vite: nessuna
+configurazione, nessuna variabile d'ambiente da impostare. Ogni push su
+`main` fa deploy da solo.
 
 ## Limiti noti di questa versione
 

@@ -12,11 +12,4 @@ export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
   },
-  server: {
-    // in sviluppo, /api punta a `vercel dev` (o un mock) sulla porta 3000;
-    // in produzione Vercel serve /api automaticamente, non serve proxy
-    proxy: {
-      "/api": "http://localhost:3000",
-    },
-  },
 });

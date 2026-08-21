@@ -248,7 +248,7 @@ export default function App() {
             >
               <Plus size={18} color={tokens.textPrimary} />
             </button>
-            <VoiceCapture categories={categories} badges={badges} settings={settings} today={today} onConfirm={handleVoiceConfirm} />
+            <VoiceCapture categories={categories} badges={badges} onConfirm={handleVoiceConfirm} />
             <div style={{ width: 44 }} />
           </div>
 

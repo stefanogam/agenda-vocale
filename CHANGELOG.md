@@ -6,6 +6,23 @@ Ogni modifica al progetto incrementa il numero di versione qui sotto e in
 - **MINOR** (0.X.0): nuove funzionalità che non rompono quelle esistenti
 - **MAJOR** (X.0.0): cambiamenti che rompono la compatibilità con l'uso precedente
 
+## [0.4.0] — 2026-08-21
+
+La voce ora funziona senza API esterne.
+
+- Nuovo **interprete italiano locale** (`client/lib/parse-italian.js`):
+  riconosce date ("domani", "martedì", "12 settembre", "tra due
+  settimane"), orari ("alle 15:30", "alle tre", "alle sette e mezza"),
+  ricorrenze ("ogni lunedì", "ogni 3 mesi", "tutti i giorni"), tipo
+  (scadenza / radar) e indovina categoria e badge dal contesto
+- **Nessuna chiave API, nessun account, nessun costo**: il testo non esce
+  più dal dispositivo e la voce funziona anche offline
+- Rimossa la funzione serverless e la dipendenza da servizi esterni
+  (spostata in `future-upgrade/` come riferimento)
+- Aggiunti 35 test automatici sull'interprete
+- "alle tre" viene interpretato come le 15:00, non le 3 di notte, a meno
+  che non si dica esplicitamente "di mattina"
+
 ## [0.3.0] — 2026-08-21
 
 Numero di versione visibile e riordino delle viste.

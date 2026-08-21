@@ -7,7 +7,7 @@
 //    client/reminders.js) — non c'è un server che le programma, quindi
 //    l'affidabilità dipende dall'app aperta o rimasta in background.
 
-const CACHE_VERSION = "v4"; // bump ad ogni release (vedi CHANGELOG.md) per invalidare la cache vecchia
+const CACHE_VERSION = "v5"; // bump ad ogni release (vedi CHANGELOG.md) per invalidare la cache vecchia
 const SHELL_CACHE = `shell-${CACHE_VERSION}`;
 const API_CACHE = `api-${CACHE_VERSION}`;
 
@@ -44,11 +44,6 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
-
-  // Le Edge Function di scrittura/voce (voice-extract, ecc.) non vanno mai
-  // servite dalla cache: se non c'è rete devono fallire esplicitamente,
-  // così il client sa che deve mettere l'azione in coda (vedi client/offline-sync.js)
-  if (url.pathname.startsWith("/api/")) return;
 
   // Asset statici (JS/CSS/icone) -> cache-first, sono immutabili tra deploy
   if (["style", "script", "image", "font"].includes(request.destination)) {

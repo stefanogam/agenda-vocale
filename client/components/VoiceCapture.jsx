@@ -3,6 +3,7 @@ import { useState, useRef } from "react";
 import { Mic, Square, X } from "lucide-react";
 import { tokens } from "../lib/tokens.js";
 import PreviewSheet from "./PreviewSheet.jsx";
+import { parseItalianCommand } from "../lib/parse-italian.js";
 
 // Riconoscimento vocale del browser: gratis, nessuna chiave API, ma non
 // disponibile ovunque (bene su Chrome/Edge/Safari recenti, assente su
@@ -10,7 +11,7 @@ import PreviewSheet from "./PreviewSheet.jsx";
 const SpeechRecognitionAPI =
   typeof window !== "undefined" ? window.SpeechRecognition || window.webkitSpeechRecognition : null;
 
-export default function VoiceCapture({ categories, badges, settings, today, onConfirm }) {
+export default function VoiceCapture({ categories, badges, onConfirm }) {
   const [phase, setPhase] = useState("idle"); // idle | listening | processing | preview | clarify | unsupported
   const [transcript, setTranscript] = useState("");
   const [extraction, setExtraction] = useState(null);
@@ -62,26 +63,15 @@ export default function VoiceCapture({ categories, badges, settings, today, onCo
   }
 
   async function runExtraction(text) {
-    try {
-      const res = await fetch("/api/voice-extract", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          transcript: text,
-          timezone: settings.timezone,
-          now: today.toISOString(),
-          categories: categories.map((c) => c.name),
-          badges: badges.map((b) => b.name),
-        }),
-      });
-      if (!res.ok) throw new Error(`status ${res.status}`);
-      const data = await res.json();
-      setExtraction({ ...data, transcript: text });
-      setPhase(data.confidence === "low" ? "clarify" : "preview");
-    } catch (err) {
-      console.error("Estrazione vocale fallita:", err);
-      setPhase("idle");
-    }
+    // Interpretazione locale: nessuna chiamata di rete, nessuna chiave API,
+    // il testo non esce mai dal dispositivo.
+    const data = parseItalianCommand(text, {
+      now: new Date(),
+      categories,
+      badges,
+    });
+    setExtraction(data);
+    setPhase(data.confidence === "low" ? "clarify" : "preview");
   }
 
   function handleConfirm(itemData) {
