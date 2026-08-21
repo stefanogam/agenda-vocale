@@ -6,6 +6,28 @@ Ogni modifica al progetto incrementa il numero di versione qui sotto e in
 - **MINOR** (0.X.0): nuove funzionalità che non rompono quelle esistenti
 - **MAJOR** (X.0.0): cambiamenti che rompono la compatibilità con l'uso precedente
 
+## [0.5.0] — 2026-08-21
+
+Promemoria flessibili e modifica completa.
+
+- **Nessun promemoria**: si può ora creare un elemento senza alcun avviso
+  (pulsante "Nessuno")
+- **Promemoria multipli**: se ne possono scegliere più di uno per lo stesso
+  elemento, ad esempio 1 giorno prima *e* 1 ora prima
+- **Aggiornamento immediato delle viste**: creando o modificando un evento,
+  il calendario mensile e settimanale si aggiornano subito. Prima bisognava
+  cambiare mese e tornare indietro per vedere la modifica, perché quelle
+  viste caricavano i dati per conto proprio e non si accorgevano dei
+  cambiamenti fatti altrove
+- **Modifica completa**: la scheda di modifica mostra ora *tutti* i campi
+  (note, ricorrenza, promemoria, durata su più giorni, tipo, tutto il
+  giorno), non più solo titolo, categoria, data e badge
+- Sotto il cofano: i campi del form sono stati unificati in un unico
+  componente condiviso da creazione, conferma vocale e modifica — era la
+  causa dei campi mancanti, e ora non può ripetersi
+- Gli elementi creati con le versioni precedenti continuano a funzionare:
+  il vecchio promemoria singolo viene letto correttamente
+
 ## [0.4.0] — 2026-08-21
 
 La voce ora funziona senza API esterne.

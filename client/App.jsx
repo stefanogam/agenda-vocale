@@ -8,7 +8,8 @@ import { dateKey } from "./lib/date-utils.js";
 import { APP_VERSION } from "./lib/version.js";
 import { registerServiceWorker } from "./pwa.js";
 import { startReminderLoop, requestNotificationPermission } from "./reminders.js";
-import CreateSheet, { emptyDraft } from "./components/CreateSheet.jsx";
+import CreateSheet from "./components/CreateSheet.jsx";
+import { emptyDraft } from "./lib/item-draft.js";
 import DetailSheet from "./components/DetailSheet.jsx";
 import EventRow from "./components/EventRow.jsx";
 import WeekView from "./components/WeekView.jsx";
@@ -29,6 +30,11 @@ export default function App() {
   const [badges, setBadges] = useState([]);
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
+  // Incrementato ad ogni ricarica dei dati: le viste Settimana e Mese
+  // caricano le proprie occorrenze e senza questo non si accorgerebbero
+  // di una modifica fatta altrove (era il motivo per cui bisognava
+  // cambiare mese e tornare indietro per vedere un evento appena creato).
+  const [dataVersion, setDataVersion] = useState(0);
 
   const [screen, setScreen] = useState("agenda");
   const [agendaView, setAgendaView] = useState("mese");
@@ -50,6 +56,7 @@ export default function App() {
     setCategories(cats);
     setBadges(bdgs);
     setSettings(cfg);
+    setDataVersion((v) => v + 1);
   }, []);
 
   useEffect(() => {
@@ -214,7 +221,7 @@ export default function App() {
             <WeekView
               catColor={catColor} catIcon={catIcon} badgeColor={badgeColor} settings={settings} today={today}
               selectedKey={selectedKey} setSelectedKey={setSelectedKey}
-              anchor={weekAnchor} setAnchor={setWeekAnchor}
+              anchor={weekAnchor} setAnchor={setWeekAnchor} dataVersion={dataVersion}
               onOpen={(o) => setDetail({ occ: o, isRadar: false })}
             />
           )}
@@ -223,7 +230,7 @@ export default function App() {
             <MonthView
               catColor={catColor} catIcon={catIcon} badgeColor={badgeColor} settings={settings} today={today}
               selectedKey={selectedKey} setSelectedKey={setSelectedKey}
-              anchor={monthAnchor} setAnchor={setMonthAnchor}
+              anchor={monthAnchor} setAnchor={setMonthAnchor} dataVersion={dataVersion}
               onOpen={(o) => setDetail({ occ: o, isRadar: false })}
             />
           )}
@@ -248,7 +255,7 @@ export default function App() {
             >
               <Plus size={18} color={tokens.textPrimary} />
             </button>
-            <VoiceCapture categories={categories} badges={badges} onConfirm={handleVoiceConfirm} />
+            <VoiceCapture categories={categories} badges={badges} defaultReminderMinutes={settings.defaultReminderMinutes} onConfirm={handleVoiceConfirm} />
             <div style={{ width: 44 }} />
           </div>
 

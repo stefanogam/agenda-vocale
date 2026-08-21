@@ -68,7 +68,7 @@ export async function createItem(data) {
     recurrence_ends_at: null,
     deadline: false,
     badges: [],
-    reminder_minutes: null,
+    reminders: [],           // minuti prima dell'orario; vuoto = nessun promemoria
     last_checked_at: null, // solo per i radar
     created_via: "manual",  // 'manual' | 'voice'
     raw_transcript: null,

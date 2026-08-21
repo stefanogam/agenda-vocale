@@ -1,11 +1,12 @@
 // client/components/DetailSheet.jsx
 import { useState } from "react";
-import { Check, X, Clock, CalendarDays, AlarmClock, Repeat, Eye, RotateCw, Star } from "lucide-react";
-import { tokens } from "../lib/tokens.js";
-import { ICONS } from "../lib/icons.js";
+import { Check, X, Clock, CalendarDays, AlarmClock, Repeat, Eye, RotateCw, Bell, BellOff } from "lucide-react";
+import { tokens, reminderLabel } from "../lib/tokens.js";
 import { parseKey, shortDate } from "../lib/date-utils.js";
 import { describeRRule } from "../lib/recurrence.js";
+import { itemToDraft, draftToItem, readReminders } from "../lib/item-draft.js";
 import { Chip } from "./ui.jsx";
+import ItemFields from "./ItemFields.jsx";
 import RecurrenceChoice from "./RecurrenceChoice.jsx";
 import { useEscapeClose } from "../lib/use-escape-close.js";
 
@@ -17,7 +18,6 @@ function countdownLabel(occ, today) {
   return `tra ${Math.round(diff / 7)} settimane`;
 }
 
-// `occ` = un'occorrenza espansa per gli appuntamenti, oppure l'item grezzo per i radar
 export default function DetailSheet({ occ, isRadar, onClose, catColor, catIcon, badgeColor, categories, badges, today, onDelete, onSave, onMarkChecked }) {
   const isRecurring = !isRadar && !!occ.rrule;
   const Icon = catIcon(occ.category);
@@ -25,20 +25,12 @@ export default function DetailSheet({ occ, isRadar, onClose, catColor, catIcon, 
   const [editing, setEditing] = useState(false);
   const [pendingAction, setPendingAction] = useState(null); // 'edit' | 'delete'
   const [editScope, setEditScope] = useState("series");
-  const [draft, setDraft] = useState(isRadar
-    ? { title: occ.title, category: occ.category, cadence: describeRRule(occ.rrule) }
-    : { title: occ.title, category: occ.category, date: occ.date, time: occ.time || "", badges: occ.badges || [] }
-  );
+  const [draft, setDraft] = useState(() => itemToDraft(occ, categories));
 
   useEscapeClose(onClose);
 
-  function toggleBadge(name) {
-    setDraft((d) => ({ ...d, badges: d.badges.includes(name) ? d.badges.filter((b) => b !== name) : [...d.badges, name] }));
-  }
-  function save() {
-    if (isRadar) onSave(occ, { title: draft.title, category: draft.category }, "series");
-    else onSave(occ, { title: draft.title, category: draft.category, date: draft.date, time: draft.time || null, badges: draft.badges }, editScope);
-  }
+  const reminders = readReminders(occ);
+
   function requestEdit() { isRecurring ? setPendingAction("edit") : setEditing(true); }
   function requestDelete() { isRecurring ? setPendingAction("delete") : onDelete(occ, "series"); }
 
@@ -58,7 +50,7 @@ export default function DetailSheet({ occ, isRadar, onClose, catColor, catIcon, 
 
   return (
     <div className="absolute inset-0 z-30 flex items-end" style={{ background: "rgba(8,11,18,0.55)" }} onClick={onClose}>
-      <div role="dialog" aria-modal="true" aria-label={isRadar ? "Dettaglio attività radar" : "Dettaglio appuntamento"} className="w-full rounded-t-[2rem] px-6 pt-5 pb-8 overflow-y-auto" style={{ background: tokens.surface, borderTop: `1px solid ${tokens.border}`, maxHeight: "85vh" }} onClick={(e) => e.stopPropagation()}>
+      <div role="dialog" aria-modal="true" aria-label={isRadar ? "Dettaglio attività radar" : "Dettaglio appuntamento"} className="w-full rounded-t-[2rem] px-6 pt-5 pb-8 overflow-y-auto" style={{ background: tokens.surface, borderTop: `1px solid ${tokens.border}`, maxHeight: "88vh" }} onClick={(e) => e.stopPropagation()}>
         <div className="w-10 h-1 rounded-full mx-auto mb-5" style={{ background: tokens.border }} />
 
         <div className="flex items-start justify-between mb-4">
@@ -85,6 +77,9 @@ export default function DetailSheet({ occ, isRadar, onClose, catColor, catIcon, 
                   {occ.time && <Chip icon={<Clock size={13} />} label={occ.time} />}
                   {occ.deadline && <Chip icon={<AlarmClock size={13} />} label={countdownLabel(occ, today)} />}
                   {occ.rrule && <Chip icon={<Repeat size={13} />} label={describeRRule(occ.rrule)} />}
+                  {reminders.length === 0
+                    ? <Chip icon={<BellOff size={13} />} label="Nessun promemoria" />
+                    : reminders.map((m) => <Chip key={m} icon={<Bell size={13} />} label={reminderLabel(m)} />)}
                 </>
               )}
             </div>
@@ -118,57 +113,24 @@ export default function DetailSheet({ occ, isRadar, onClose, catColor, catIcon, 
           </>
         ) : (
           <>
-            <input value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} className="w-full bg-transparent outline-none f-display text-xl mb-4 pb-1" style={{ color: tokens.textPrimary, borderBottom: `1px solid ${tokens.border}` }} />
-
-            <p className="f-mono text-[10px] uppercase tracking-wider mb-2" style={{ color: tokens.textSecondary }}>Categoria</p>
-            <div className="flex gap-2 flex-wrap mb-4">
-              {categories.map((c) => {
-                const CIcon = ICONS[c.icon] || Star;
-                const active = draft.category === c.name;
-                return (
-                  <button key={c.id} onClick={() => setDraft({ ...draft, category: c.name })} className="flex items-center gap-1.5 rounded-full pl-2 pr-3 py-1.5" style={{ background: active ? c.color : tokens.surface2 }}>
-                    <CIcon size={12} color={active ? tokens.bg : tokens.textSecondary} />
-                    <span className="text-xs f-mono" style={{ color: active ? tokens.bg : tokens.textSecondary }}>{c.name}</span>
-                  </button>
-                );
-              })}
-            </div>
-
-            {!isRadar && (
-              <>
-                <p className="f-mono text-[10px] uppercase tracking-wider mb-2" style={{ color: tokens.textSecondary }}>Data e ora</p>
-                <div className="flex gap-2 mb-4">
-                  <input type="date" value={draft.date} onChange={(e) => setDraft({ ...draft, date: e.target.value })} className="flex-1 rounded-xl px-3 py-2.5 text-sm f-mono outline-none" style={{ background: tokens.surface2, color: tokens.textPrimary, border: `1px solid ${tokens.border}` }} />
-                  <input type="time" value={draft.time} onChange={(e) => setDraft({ ...draft, time: e.target.value })} className="w-28 rounded-xl px-3 py-2.5 text-sm f-mono outline-none" style={{ background: tokens.surface2, color: tokens.textPrimary, border: `1px solid ${tokens.border}` }} />
-                </div>
-
-                <p className="f-mono text-[10px] uppercase tracking-wider mb-2" style={{ color: tokens.textSecondary }}>Badge</p>
-                <div className="flex gap-2 flex-wrap mb-2">
-                  {badges.map((b) => {
-                    const active = draft.badges.includes(b.name);
-                    return (
-                      <button key={b.id} onClick={() => toggleBadge(b.name)} className="f-mono text-[10px] rounded-full px-3 py-1.5" style={{ background: active ? b.color : tokens.surface2, color: active ? tokens.bg : tokens.textSecondary, border: `1px solid ${active ? b.color : tokens.border}` }}>
-                        {b.name}
-                      </button>
-                    );
-                  })}
-                </div>
-                {isRecurring && (
-                  <p className="text-xs mt-3 mb-2 flex items-center gap-1.5" style={{ color: tokens.amber }}>
-                    <Repeat size={12} />
-                    {editScope === "occurrence" && "Stai modificando solo questa occorrenza — il resto della serie resta invariato."}
-                    {editScope === "following" && "Stai modificando questa e le occorrenze successive — quelle passate restano invariate."}
-                    {editScope === "series" && "Stai modificando l'intera serie ricorrente."}
-                  </p>
-                )}
-              </>
+            {isRecurring && (
+              <p className="text-xs mb-4 flex items-start gap-1.5" style={{ color: tokens.amber }}>
+                <Repeat size={12} className="mt-0.5 shrink-0" />
+                <span>
+                  {editScope === "occurrence" && "Stai modificando solo questa occorrenza — il resto della serie resta invariato."}
+                  {editScope === "following" && "Stai modificando questa e le occorrenze successive — quelle passate restano invariate."}
+                  {editScope === "series" && "Stai modificando l'intera serie ricorrente."}
+                </span>
+              </p>
             )}
 
-            <div className="flex gap-3 mt-4">
+            <ItemFields draft={draft} setDraft={setDraft} categories={categories} badges={badges} />
+
+            <div className="flex gap-3">
               <button onClick={() => setEditing(false)} className="flex-1 rounded-xl py-3 flex items-center justify-center gap-2 text-sm font-medium" style={{ background: "transparent", border: `1px solid ${tokens.border}`, color: tokens.textSecondary }}>
                 Annulla
               </button>
-              <button onClick={save} className="flex-1 rounded-xl py-3 flex items-center justify-center gap-2 text-sm font-semibold" style={{ background: tokens.amber, color: tokens.bg }}>
+              <button onClick={() => onSave(occ, draftToItem(draft), editScope)} disabled={!draft.title.trim()} className="flex-1 rounded-xl py-3 flex items-center justify-center gap-2 text-sm font-semibold" style={{ background: tokens.amber, color: tokens.bg, opacity: draft.title.trim() ? 1 : 0.5 }}>
                 <Check size={16} /> Salva
               </button>
             </div>

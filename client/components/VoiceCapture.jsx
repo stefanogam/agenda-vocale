@@ -11,7 +11,7 @@ import { parseItalianCommand } from "../lib/parse-italian.js";
 const SpeechRecognitionAPI =
   typeof window !== "undefined" ? window.SpeechRecognition || window.webkitSpeechRecognition : null;
 
-export default function VoiceCapture({ categories, badges, onConfirm }) {
+export default function VoiceCapture({ categories, badges, defaultReminderMinutes, onConfirm }) {
   const [phase, setPhase] = useState("idle"); // idle | listening | processing | preview | clarify | unsupported
   const [transcript, setTranscript] = useState("");
   const [extraction, setExtraction] = useState(null);
@@ -139,7 +139,7 @@ export default function VoiceCapture({ categories, badges, onConfirm }) {
       )}
 
       {phase === "preview" && extraction && (
-        <PreviewSheet extraction={extraction} categories={categories} badges={badges} onCancel={cancel} onConfirm={handleConfirm} />
+        <PreviewSheet extraction={extraction} categories={categories} badges={badges} defaultReminderMinutes={defaultReminderMinutes} onCancel={cancel} onConfirm={handleConfirm} />
       )}
     </>
   );

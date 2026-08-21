@@ -8,7 +8,7 @@ import PeriodNav from "./PeriodNav.jsx";
 
 const WEEKDAY_SHORT = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"];
 
-export default function WeekView({ catColor, catIcon, badgeColor, settings, today, selectedKey, setSelectedKey, anchor, setAnchor, onOpen }) {
+export default function WeekView({ catColor, catIcon, badgeColor, settings, today, selectedKey, setSelectedKey, anchor, setAnchor, dataVersion, onOpen }) {
   const [occurrences, setOccurrences] = useState([]);
   const days = weekDatesFor(anchor);
 
@@ -19,7 +19,7 @@ export default function WeekView({ catColor, catIcon, badgeColor, settings, toda
       setOccurrences(await store.getOccurrencesInRange(from, to));
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [anchor]);
+  }, [anchor, dataVersion]);
 
   const dayOccurrences = occurrences.filter((o) => o.type !== "radar" && o.date === selectedKey);
   const countFor = (key) => occurrences.filter((o) => o.type !== "radar" && o.date === key).length;
