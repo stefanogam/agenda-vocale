@@ -12,6 +12,7 @@
 import * as db from "./db.js";
 import { RRule } from "rrule";
 import { descendantIds } from "./todo-tree.js";
+import { parseRecurrenceEnd } from "./recurrence.js";
 
 const DEFAULT_CATEGORIES = [
   { name: "Lavoro", color: "#8AA0E8", icon: "Briefcase" },
@@ -184,6 +185,12 @@ function localDateKey(d) {
 }
 
 // Identifica un'occorrenza senza dipendere dal fuso: orario "da parete"
+function addDays(d, n) {
+  const r = new Date(d);
+  r.setDate(r.getDate() + n);
+  return r;
+}
+
 function occurrenceKey(d) {
   return `${localDateKey(d)}T${pad(d.getHours())}:${pad(d.getMinutes())}:00`;
 }
@@ -202,10 +209,18 @@ function toRRuleDate(d) {
 function rawOccurrences(item, from, to) {
   if (item.type === "radar" || !item.date) return [];
   const start = new Date(`${item.date}T${item.time ?? "00:00"}:00`);
-  if (!item.rrule) return start >= from && start <= to ? [start] : [];
+  if (!item.rrule) {
+    // Un evento su più giorni va incluso anche se è cominciato prima del
+    // periodo visualizzato, purché lo attraversi: altrimenti una vacanza
+    // iniziata a fine mese sparirebbe dal mese successivo.
+    const end = item.end_date ? new Date(`${item.end_date}T23:59:59`) : start;
+    return end >= from && start <= to ? [start] : [];
+  }
 
   const rule = RRule.fromString(`DTSTART:${toRRuleDate(start)}\nRRULE:${item.rrule}`);
-  const until = item.recurrence_ends_at ? new Date(item.recurrence_ends_at) : to;
+  // "fino al" è una data semplice: va letta come fine giornata locale,
+  // altrimenti l'ultima occorrenza verrebbe tagliata fuori
+  const until = parseRecurrenceEnd(item.recurrence_ends_at) ?? to;
   const effectiveEnd = until < to ? until : to;
   return rule
     .between(toUTCWall(from), toUTCWall(effectiveEnd), true)
@@ -227,6 +242,13 @@ export async function getOccurrencesInRange(from, to) {
     const occurrences = rawOccurrences(item, from, to);
     const overrides = overridesByMaster.get(item.id) ?? [];
 
+    // Durata in giorni presa dall'evento originale: un evento ricorrente
+    // di 3 giorni deve durare 3 giorni ad OGNI ripetizione, non finire
+    // sempre alla data di fine della prima occorrenza.
+    const durationDays = item.end_date && item.date
+      ? Math.max(1, Math.round((new Date(`${item.end_date}T00:00:00`) - new Date(`${item.date}T00:00:00`)) / 86400000) + 1)
+      : 1;
+
     for (const occAt of occurrences) {
       const key = occurrenceKey(occAt);
       const override = overrides.find((o) => o.occurrence_at === key);
@@ -235,6 +257,7 @@ export async function getOccurrencesInRange(from, to) {
       result.push({
         ...item,
         date: localDateKey(occAt),   // data DI QUESTA occorrenza, dai campi locali
+        end_date: durationDays > 1 ? localDateKey(addDays(occAt, durationDays - 1)) : null,
         time: item.time ? `${pad(occAt.getHours())}:${pad(occAt.getMinutes())}` : null,
         ...(override?.status === "modified" ? override : {}),
         id: item.id,               // l'id resta quello del master, sempre

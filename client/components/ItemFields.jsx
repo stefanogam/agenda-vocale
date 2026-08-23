@@ -9,7 +9,7 @@
 import { Star } from "lucide-react";
 import { tokens, REMINDER_OPTIONS, reminderLabel } from "../lib/tokens.js";
 import { ICONS } from "../lib/icons.js";
-import { RECUR_UNITS } from "../lib/recurrence.js";
+import { RECUR_UNITS, WEEKDAY_CODES, supportsWeekdays } from "../lib/recurrence.js";
 
 const Label = ({ children }) => (
   <p className="f-mono text-[10px] uppercase tracking-wider mb-2" style={{ color: tokens.textSecondary }}>{children}</p>
@@ -26,6 +26,13 @@ export default function ItemFields({ draft, setDraft, categories, badges, showTy
 
   const toggleReminder = (min) =>
     set({ reminders: d.reminders.includes(min) ? d.reminders.filter((r) => r !== min) : [...d.reminders, min].sort((a, b) => a - b) });
+
+  const toggleWeekday = (code) => {
+    const cur = d.byday || [];
+    const next = cur.includes(code) ? cur.filter((c) => c !== code) : [...cur, code];
+    // mantiene l'ordine lunedì→domenica, non quello di selezione
+    set({ byday: WEEKDAY_CODES.filter((w) => next.includes(w.code)).map((w) => w.code) });
+  };
 
   return (
     <>
@@ -98,12 +105,65 @@ export default function ItemFields({ draft, setDraft, categories, badges, showTy
             </button>
           </div>
           {d.repeats && (
-            <div className="flex gap-2 mb-4">
-              <span className="text-xs self-center f-mono" style={{ color: tokens.textSecondary }}>ogni</span>
-              <input type="number" min={1} value={d.recurInterval} onChange={(e) => set({ recurInterval: Math.max(1, Number(e.target.value)), byday: null })} className="w-16 rounded-xl px-3 py-2.5 text-sm f-mono outline-none text-center" style={inputStyle} />
-              <select value={d.recurUnit} onChange={(e) => set({ recurUnit: e.target.value, byday: null })} className="flex-1 rounded-xl px-3 py-2.5 text-sm f-mono outline-none" style={inputStyle}>
-                {RECUR_UNITS.map((u) => <option key={u.key} value={u.key}>{u.key}</option>)}
-              </select>
+            <div className="mb-4">
+              <div className="flex gap-2 mb-3">
+                <span className="text-xs self-center f-mono" style={{ color: tokens.textSecondary }}>ogni</span>
+                <input type="number" min={1} value={d.recurInterval} onChange={(e) => set({ recurInterval: Math.max(1, Number(e.target.value)) })} className="w-16 rounded-xl px-3 py-2.5 text-sm f-mono outline-none text-center" style={inputStyle} />
+                <select
+                  value={d.recurUnit}
+                  onChange={(e) => {
+                    const unit = e.target.value;
+                    // i giorni non hanno senso per minuti/ore/giorni/anni: si azzerano
+                    set({ recurUnit: unit, byday: supportsWeekdays(unit) ? d.byday : [] });
+                  }}
+                  className="flex-1 rounded-xl px-3 py-2.5 text-sm f-mono outline-none"
+                  style={inputStyle}
+                >
+                  {RECUR_UNITS.map((u) => <option key={u.key} value={u.key}>{u.key}</option>)}
+                </select>
+              </div>
+
+              {supportsWeekdays(d.recurUnit) && (
+                <>
+                  <p className="f-mono text-[10px] uppercase tracking-wider mb-2" style={{ color: tokens.textSecondary }}>
+                    In quali giorni
+                  </p>
+                  <div className="flex gap-1.5 mb-2">
+                    {WEEKDAY_CODES.map((w) => {
+                      const active = (d.byday || []).includes(w.code);
+                      return (
+                        <button
+                          key={w.code}
+                          onClick={() => toggleWeekday(w.code)}
+                          aria-label={w.label}
+                          className="flex-1 rounded-lg py-2 text-xs f-mono"
+                          style={{ background: active ? tokens.amber : tokens.surface2, color: active ? tokens.bg : tokens.textSecondary }}
+                        >
+                          {w.short}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="text-xs mb-3" style={{ color: tokens.textSecondary }}>
+                    {(d.byday || []).length === 0
+                      ? "Nessun giorno scelto: si ripete nello stesso giorno della data di partenza."
+                      : `Si ripete ${(d.byday || []).length === 1 ? "il" : "nei giorni"} ${WEEKDAY_CODES.filter((w) => d.byday.includes(w.code)).map((w) => w.label).join(", ")}.`}
+                  </p>
+                </>
+              )}
+
+              <p className="f-mono text-[10px] uppercase tracking-wider mb-2" style={{ color: tokens.textSecondary }}>Fino al (opzionale)</p>
+              <div className="flex gap-2">
+                <input type="date" value={d.recurEndDate || ""} onChange={(e) => set({ recurEndDate: e.target.value })} className="flex-1 rounded-xl px-3 py-2.5 text-sm f-mono outline-none" style={inputStyle} />
+                {d.recurEndDate && (
+                  <button onClick={() => set({ recurEndDate: "" })} className="rounded-xl px-3 text-xs f-mono" style={{ background: tokens.surface2, color: tokens.textSecondary, border: `1px solid ${tokens.border}` }}>
+                    Togli
+                  </button>
+                )}
+              </div>
+              <p className="text-xs mt-1" style={{ color: tokens.textSecondary }}>
+                {d.recurEndDate ? "Dopo questa data l'evento non si ripete più." : "Senza data di fine si ripete indefinitamente."}
+              </p>
             </div>
           )}
 

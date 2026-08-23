@@ -6,6 +6,62 @@ Ogni modifica al progetto incrementa il numero di versione qui sotto e in
 - **MINOR** (0.X.0): nuove funzionalità che non rompono quelle esistenti
 - **MAJOR** (X.0.0): cambiamenti che rompono la compatibilità con l'uso precedente
 
+## [0.9.0] — 2026-08-22
+
+Eventi su più giorni disegnati come barre.
+
+- Nei calendari **Mese** e **Settimana** gli eventi che durano più giorni
+  sono ora una **barra continua** sui giorni interessati, non più un
+  puntino sul solo giorno iniziale. Gli eventi di un giorno solo
+  continuano ad avere il puntino
+- La barra si spezza correttamente a cavallo di due settimane, con gli
+  angoli squadrati dal lato in cui prosegue
+- Eventi lunghi che si sovrappongono vengono messi su corsie diverse,
+  così restano tutti leggibili
+- Nella vista Settimana la barra mostra anche il titolo ed è toccabile
+  per aprire il dettaglio
+
+**Corretti** due problemi emersi lavorandoci
+- Toccando un giorno *intermedio* di un evento lungo, l'evento non
+  compariva nell'elenco sotto: risultava solo nel giorno iniziale
+- Un evento iniziato prima del periodo visualizzato non veniva caricato
+  affatto: una vacanza a cavallo di fine mese spariva dal mese successivo
+
+## [0.9.0] — 2026-08-22
+
+Eventi su più giorni disegnati come barra.
+
+- Nei calendari **Mese** e **Settimana**, un evento che dura più giorni
+  consecutivi è ora una **barra continua** lungo i giorni che occupa,
+  invece di un puntino sul solo giorno iniziale
+- La barra prosegue oltre il bordo della settimana quando l'evento
+  attraversa più righe, con gli angoli squadrati dal lato in cui continua
+- Se più eventi lunghi si sovrappongono vengono messi su corsie separate,
+  i più lunghi in alto
+- Gli eventi di un solo giorno restano puntini, come prima
+- L'elenco sotto al calendario mostra ora un evento lungo in **tutti** i
+  giorni che copre, non solo il primo
+
+**Corretto**
+- Un evento ricorrente che dura più giorni (es. 3 giorni ogni mese)
+  manteneva la data di fine della prima occorrenza: ora ogni ripetizione
+  dura correttamente lo stesso numero di giorni
+
+## [0.8.0] — 2026-08-21
+
+Ricorrenze sui giorni della settimana e data di fine.
+
+- **Scelta dei giorni**: un evento può ripetersi in più giorni specifici
+  (es. lunedì *e* martedì), combinabile con l'intervallo — "ogni 2
+  settimane il lunedì e il martedì". Disponibile per ricorrenze
+  settimanali e mensili, dove ha senso; per minuti/ore/giorni/anni i
+  giorni si azzerano da soli
+- **Fino al (opzionale)**: la ricorrenza può terminare a una data scelta.
+  Senza, prosegue indefinitamente come prima
+- La data di fine è interpretata come fine giornata locale, così
+  l'ultima occorrenza non viene tagliata fuori
+- Le etichette ora descrivono i giorni: "Ogni 2 settimane (lun, mar)"
+
 ## [0.7.0] — 2026-08-21
 
 Nuova sezione To-do.

@@ -22,7 +22,8 @@ export function emptyDraft(categories, defaultReminderMinutes, today) {
     repeats: false,
     recurInterval: 1,
     recurUnit: "settimane",
-    byday: null,
+    byday: [],            // codici giorno, es. ["MO","TU"]; vuoto = nessun vincolo
+    recurEndDate: "",     // "fino al" — vuoto = si ripete senza fine
     cadenceInterval: 2,
     cadenceUnit: "settimane",
     // Array: vuoto = nessun promemoria, più valori = più promemoria
@@ -55,7 +56,8 @@ export function itemToDraft(item, categories = []) {
     repeats: !isRadar && !!item.rrule,
     recurInterval: !isRadar && rec ? rec.interval : 1,
     recurUnit: !isRadar && rec ? rec.unitKey : "settimane",
-    byday: !isRadar && rec ? rec.byday : null,
+    byday: !isRadar && rec ? rec.byday : [],
+    recurEndDate: item.recurrence_ends_at ? String(item.recurrence_ends_at).slice(0, 10) : "",
     cadenceInterval: isRadar && rec ? rec.interval : 2,
     cadenceUnit: isRadar && rec ? rec.unitKey : "settimane",
     reminders: readReminders(item),
@@ -91,6 +93,7 @@ export function draftToItem(d) {
     all_day: d.allDay,
     deadline: d.type === "scadenza",
     rrule: d.repeats ? buildRRule(d.recurInterval, d.recurUnit, d.byday) : null,
+    recurrence_ends_at: d.repeats && d.recurEndDate ? d.recurEndDate : null,
     badges: d.badges,
     notes: d.notes || null,
     reminders: d.allDay ? d.reminders : d.reminders,
@@ -118,7 +121,8 @@ export function extractionToDraft(extraction, categories, defaultReminderMinutes
     repeats: !isRadar && !!extraction.rrule,
     recurInterval: !isRadar && rec ? rec.interval : 1,
     recurUnit: !isRadar && rec ? rec.unitKey : "settimane",
-    byday: !isRadar && rec ? rec.byday : null,
+    byday: !isRadar && rec ? rec.byday : [],
+    recurEndDate: "",
     cadenceInterval: isRadar && rec ? rec.interval : 2,
     cadenceUnit: isRadar && rec ? rec.unitKey : "settimane",
     reminders: defaultReminderMinutes != null ? [defaultReminderMinutes] : [],
