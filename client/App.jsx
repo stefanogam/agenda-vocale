@@ -4,7 +4,7 @@ import { Bell, Plus, CalendarDays, Settings as SettingsIcon, Star, List, Calenda
 import { tokens, SWATCHES } from "./lib/tokens.js";
 import { ICONS } from "./lib/icons.js";
 import * as store from "./lib/store.js";
-import { dateKey } from "./lib/date-utils.js";
+import { dateKey, startOfDay, endOfDay } from "./lib/date-utils.js";
 import { APP_VERSION } from "./lib/version.js";
 import { registerServiceWorker } from "./pwa.js";
 import { startReminderLoop, requestNotificationPermission } from "./reminders.js";
@@ -77,8 +77,10 @@ export default function App() {
   // ricalcola le occorrenze (espansione RRULE) ogni volta che gli item cambiano
   useEffect(() => {
     (async () => {
-      const from = today;
-      const to = new Date(today.getTime() + OCCURRENCE_WINDOW_DAYS * 86400000);
+      // da mezzanotte di oggi: altrimenti gli eventi "tutto il giorno"
+      // di oggi (che iniziano alle 00:00) resterebbero fuori
+      const from = startOfDay(today);
+      const to = endOfDay(new Date(today.getTime() + OCCURRENCE_WINDOW_DAYS * 86400000));
       setOccurrences(await store.getOccurrencesInRange(from, to));
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps

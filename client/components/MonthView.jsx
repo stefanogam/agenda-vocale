@@ -1,7 +1,7 @@
 // client/components/MonthView.jsx
 import { useState, useEffect } from "react";
 import { tokens } from "../lib/tokens.js";
-import { dateKey, parseKey, buildMonthGrid, diffDays, WEEKDAY_LONG, MONTH_LONG } from "../lib/date-utils.js";
+import { dateKey, parseKey, buildMonthGrid, diffDays, startOfDay, endOfDay, WEEKDAY_LONG, MONTH_LONG } from "../lib/date-utils.js";
 import * as store from "../lib/store.js";
 import EventRow from "./EventRow.jsx";
 import PeriodNav from "./PeriodNav.jsx";
@@ -16,8 +16,8 @@ export default function MonthView({ catColor, catIcon, badgeColor, settings, tod
 
   useEffect(() => {
     (async () => {
-      const from = weeks[0][0];
-      const to = new Date(weeks[5][6].getTime() + 86400000);
+      const from = startOfDay(weeks[0][0]);
+      const to = endOfDay(weeks[5][6]);
       setOccurrences(await store.getOccurrencesInRange(from, to));
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps

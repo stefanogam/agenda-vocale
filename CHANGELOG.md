@@ -6,6 +6,20 @@ Ogni modifica al progetto incrementa il numero di versione qui sotto e in
 - **MINOR** (0.X.0): nuove funzionalità che non rompono quelle esistenti
 - **MAJOR** (X.0.0): cambiamenti che rompono la compatibilità con l'uso precedente
 
+## [0.9.1] — 2026-08-22
+
+Correzione.
+
+- Nel calendario settimanale, gli eventi "tutto il giorno" del **lunedì**
+  comparivano nella settimana precedente. La finestra di ricerca partiva
+  dal lunedì *all'ora corrente* invece che da mezzanotte, così un evento
+  che inizia alle 00:00 restava appena fuori dalla settimana giusta e
+  ricadeva in quella prima
+- Stesso difetto corretto nella vista **Lista**, dove gli eventi "tutto
+  il giorno" di oggi non comparivano affatto
+- Le finestre ora vanno da mezzanotte a fine giornata, senza creare
+  doppioni al passaggio da una settimana o un mese all'altro
+
 ## [0.9.0] — 2026-08-22
 
 Eventi su più giorni disegnati come barre.
@@ -26,6 +40,20 @@ Eventi su più giorni disegnati come barre.
   compariva nell'elenco sotto: risultava solo nel giorno iniziale
 - Un evento iniziato prima del periodo visualizzato non veniva caricato
   affatto: una vacanza a cavallo di fine mese spariva dal mese successivo
+
+## [0.9.1] — 2026-08-22
+
+Correzione.
+
+- Nel calendario settimanale, gli eventi "tutto il giorno" del **lunedì**
+  comparivano nella settimana precedente. La finestra di ricerca partiva
+  dal lunedì *all'ora corrente* invece che da mezzanotte, così un evento
+  che inizia alle 00:00 restava appena fuori dalla settimana giusta e
+  ricadeva in quella prima
+- Stesso difetto corretto nella vista **Lista**, dove gli eventi "tutto
+  il giorno" di oggi non comparivano affatto
+- Le finestre ora vanno da mezzanotte a fine giornata, senza creare
+  doppioni al passaggio da una settimana o un mese all'altro
 
 ## [0.9.0] — 2026-08-22
 

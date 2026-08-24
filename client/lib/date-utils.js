@@ -61,11 +61,26 @@ export function isoWeekNumber(d) {
   return Math.ceil(((t - yearStart) / 86400000 + 1) / 7);
 }
 
+// Inizio e fine della giornata. Servono per delimitare le finestre di
+// ricerca: se una finestra parte dall'ora corrente invece che da
+// mezzanotte, gli eventi "tutto il giorno" di quel giorno (che iniziano
+// alle 00:00) restano fuori e finiscono nel periodo precedente.
+export function startOfDay(d) {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
+}
+export function endOfDay(d) {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
+}
+
 export function weekDatesFor(anchor) {
   const dow = (anchor.getDay() + 6) % 7; // 0 = lunedì
-  const monday = new Date(anchor);
-  monday.setDate(anchor.getDate() - dow);
-  return Array.from({ length: 7 }, (_, i) => { const d = new Date(monday); d.setDate(monday.getDate() + i); return d; });
+  const monday = startOfDay(anchor);
+  monday.setDate(monday.getDate() - dow);
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    return d;
+  });
 }
 
 export function buildMonthGrid(year, month) {

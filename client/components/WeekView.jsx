@@ -1,7 +1,7 @@
 // client/components/WeekView.jsx
 import { useState, useEffect } from "react";
 import { tokens } from "../lib/tokens.js";
-import { dateKey, parseKey, weekDatesFor, diffDays, isoWeekNumber, WEEKDAY_LONG, MONTH_LONG } from "../lib/date-utils.js";
+import { dateKey, parseKey, weekDatesFor, diffDays, isoWeekNumber, startOfDay, endOfDay, WEEKDAY_LONG, MONTH_LONG } from "../lib/date-utils.js";
 import * as store from "../lib/store.js";
 import EventRow from "./EventRow.jsx";
 import PeriodNav from "./PeriodNav.jsx";
@@ -16,8 +16,8 @@ export default function WeekView({ catColor, catIcon, badgeColor, settings, toda
 
   useEffect(() => {
     (async () => {
-      const from = days[0];
-      const to = new Date(days[6].getTime() + 86400000);
+      const from = startOfDay(days[0]);
+      const to = endOfDay(days[6]);
       setOccurrences(await store.getOccurrencesInRange(from, to));
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
