@@ -19,15 +19,25 @@ export function buildTodoRows(todos) {
   }
 
   const rows = [];
-  (function walk(parentKey, prefix, depth) {
+  (function walk(parentKey, prefix, depth, rootId) {
     const children = byParent.get(parentKey) ?? [];
     children.forEach((t, i) => {
       const number = prefix ? `${prefix}.${i + 1}` : `${i + 1}`;
       const descendants = countDescendants(byParent, t.id);
-      rows.push({ ...t, number, depth, ...descendants });
-      walk(t.id, number, depth + 1);
+      // rootId = l'attività principale (livello 1) da cui discende:
+      // serve per mostrare o nascondere l'intero ramo con un tocco
+      const myRoot = depth === 0 ? t.id : rootId;
+      rows.push({
+        ...t,
+        number,
+        depth,
+        rootId: myRoot,
+        hasChildren: (byParent.get(t.id) ?? []).length > 0,
+        ...descendants,
+      });
+      walk(t.id, number, depth + 1, myRoot);
     });
-  })("root", "", 0);
+  })("root", "", 0, null);
 
   return rows;
 }

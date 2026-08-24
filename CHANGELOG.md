@@ -6,6 +6,27 @@ Ogni modifica al progetto incrementa il numero di versione qui sotto e in
 - **MINOR** (0.X.0): nuove funzionalità che non rompono quelle esistenti
 - **MAJOR** (X.0.0): cambiamenti che rompono la compatibilità con l'uso precedente
 
+## [0.10.0] — 2026-08-24
+
+Gestione delle attività: apri/chiudi e filtro completate.
+
+- **Rami richiudibili**: all'apertura della sezione si vedono solo le
+  attività principali (1, 2, 3…), con le sotto-attività chiuse. La
+  freccia accanto a ciascuna attività principale apre o chiude il suo
+  ramo; sotto il primo livello il ramo si apre tutto insieme
+- Pulsante **Espandi tutto / Collassa tutto** in alto, che cambia da sé
+  a seconda dello stato corrente
+- Pulsante **Nascondi completate / Completate nascoste (n)** per togliere
+  di mezzo quelle già fatte
+- Le attività principali chiuse mostrano l'avanzamento del ramo e
+  l'indicazione "chiusa"
+- Aggiungendo una sotto-attività dentro un ramo chiuso, il ramo si apre
+  da sé: altrimenti la nuova voce sarebbe finita in un punto invisibile
+
+**Corretto**
+- Il campo per aggiungere un'attività veniva ricreato ad ogni lettera
+  digitata, causando sfarfallio e possibile perdita del cursore
+
 ## [0.9.1] — 2026-08-22
 
 Correzione.
@@ -40,6 +61,27 @@ Eventi su più giorni disegnati come barre.
   compariva nell'elenco sotto: risultava solo nel giorno iniziale
 - Un evento iniziato prima del periodo visualizzato non veniva caricato
   affatto: una vacanza a cavallo di fine mese spariva dal mese successivo
+
+## [0.10.0] — 2026-08-24
+
+Gestione delle attività: apri/chiudi e filtro completate.
+
+- **Rami richiudibili**: all'apertura della sezione si vedono solo le
+  attività principali (1, 2, 3…), con le sotto-attività chiuse. La
+  freccia accanto a ciascuna attività principale apre o chiude il suo
+  ramo; sotto il primo livello il ramo si apre tutto insieme
+- Pulsante **Espandi tutto / Collassa tutto** in alto, che cambia da sé
+  a seconda dello stato corrente
+- Pulsante **Nascondi completate / Completate nascoste (n)** per togliere
+  di mezzo quelle già fatte
+- Le attività principali chiuse mostrano l'avanzamento del ramo e
+  l'indicazione "chiusa"
+- Aggiungendo una sotto-attività dentro un ramo chiuso, il ramo si apre
+  da sé: altrimenti la nuova voce sarebbe finita in un punto invisibile
+
+**Corretto**
+- Il campo per aggiungere un'attività veniva ricreato ad ogni lettera
+  digitata, causando sfarfallio e possibile perdita del cursore
 
 ## [0.9.1] — 2026-08-22
 
