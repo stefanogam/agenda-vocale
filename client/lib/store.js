@@ -274,18 +274,87 @@ export async function getOccurrencesInRange(from, to) {
 // ------------------------------------------------------------
 export async function listCategories() { return db.getAll("categories"); }
 export async function createCategory(data) { return db.put("categories", { id: db.newId(), ...data }); }
+
+// Quanti elementi usano una certa categoria: serve per avvisare prima
+// di cancellarla
+export async function countItemsWithCategory(name) {
+  const items = await db.getAll("items");
+  return items.filter((i) => i.category === name).length;
+}
+
+// Gli elementi fanno riferimento alla categoria per NOME, non per id:
+// rinominandola vanno aggiornati tutti, altrimenti resterebbero
+// agganciati a una categoria che non esiste più.
 export async function updateCategory(id, patch) {
   const existing = await db.get("categories", id);
-  return db.put("categories", { ...existing, ...patch });
+  if (!existing) throw new Error("Categoria non trovata");
+  const updated = { ...existing, ...patch };
+  await db.put("categories", updated);
+
+  if (patch.name && patch.name !== existing.name) {
+    const items = await db.getAll("items");
+    for (const it of items) {
+      if (it.category === existing.name) await db.put("items", { ...it, category: patch.name });
+    }
+  }
+  return updated;
 }
-export async function deleteCategory(id) { return db.remove("categories", id); }
+
+// Cancellando la categoria, gli elementi che la usavano restano ma
+// senza categoria: meglio che lasciarli puntare al nulla
+export async function deleteCategory(id) {
+  const cat = await db.get("categories", id);
+  await db.remove("categories", id);
+  if (!cat) return;
+  const items = await db.getAll("items");
+  for (const it of items) {
+    if (it.category === cat.name) await db.put("items", { ...it, category: null });
+  }
+}
 
 // ------------------------------------------------------------
 // BADGE
 // ------------------------------------------------------------
 export async function listBadges() { return db.getAll("badges"); }
 export async function createBadge(data) { return db.put("badges", { id: db.newId(), ...data }); }
-export async function deleteBadge(id) { return db.remove("badges", id); }
+
+export async function countItemsWithBadge(name) {
+  const items = await db.getAll("items");
+  return items.filter((i) => (i.badges || []).includes(name)).length;
+}
+
+// Come per le categorie, i badge sono referenziati per nome dentro
+// l'elenco `badges` di ogni elemento
+export async function updateBadge(id, patch) {
+  const existing = await db.get("badges", id);
+  if (!existing) throw new Error("Badge non trovato");
+  const updated = { ...existing, ...patch };
+  await db.put("badges", updated);
+
+  if (patch.name && patch.name !== existing.name) {
+    const items = await db.getAll("items");
+    for (const it of items) {
+      const list = it.badges || [];
+      if (list.includes(existing.name)) {
+        await db.put("items", { ...it, badges: list.map((b) => (b === existing.name ? patch.name : b)) });
+      }
+    }
+  }
+  return updated;
+}
+
+export async function deleteBadge(id) {
+  const badge = await db.get("badges", id);
+  await db.remove("badges", id);
+  if (!badge) return;
+  const items = await db.getAll("items");
+  for (const it of items) {
+    const list = it.badges || [];
+    if (list.includes(badge.name)) {
+      await db.put("items", { ...it, badges: list.filter((b) => b !== badge.name) });
+    }
+  }
+}
 
 // ------------------------------------------------------------
 // IMPOSTAZIONI (una sola riga)

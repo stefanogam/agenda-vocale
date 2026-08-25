@@ -7,7 +7,7 @@
 //    client/reminders.js) — non c'è un server che le programma, quindi
 //    l'affidabilità dipende dall'app aperta o rimasta in background.
 
-const CACHE_VERSION = "v12"; // bump ad ogni release (vedi CHANGELOG.md) per invalidare la cache vecchia
+const CACHE_VERSION = "v13"; // bump ad ogni release (vedi CHANGELOG.md) per invalidare la cache vecchia
 const SHELL_CACHE = `shell-${CACHE_VERSION}`;
 const API_CACHE = `api-${CACHE_VERSION}`;
 

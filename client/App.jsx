@@ -7,7 +7,7 @@ import * as store from "./lib/store.js";
 import { dateKey, startOfDay, endOfDay } from "./lib/date-utils.js";
 import { APP_VERSION } from "./lib/version.js";
 import { registerServiceWorker } from "./pwa.js";
-import { startReminderLoop, requestNotificationPermission } from "./reminders.js";
+import { startReminderLoop } from "./reminders.js";
 import CreateSheet from "./components/CreateSheet.jsx";
 import { emptyDraft } from "./lib/item-draft.js";
 import DetailSheet from "./components/DetailSheet.jsx";
@@ -69,7 +69,8 @@ export default function App() {
       setLoading(false);
     })();
     registerServiceWorker();
-    requestNotificationPermission();
+    // il permesso NON si chiede qui: i browser ignorano le richieste
+    // non partite da un tocco. Si attiva da Impostazioni → Preferenze.
     const intervalId = startReminderLoop();
     return () => clearInterval(intervalId);
   }, [reload]);

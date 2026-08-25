@@ -6,6 +6,34 @@ Ogni modifica al progetto incrementa il numero di versione qui sotto e in
 - **MINOR** (0.X.0): nuove funzionalità che non rompono quelle esistenti
 - **MAJOR** (X.0.0): cambiamenti che rompono la compatibilità con l'uso precedente
 
+## [0.11.0] — 2026-08-24
+
+Notifiche funzionanti e modifica di categorie e badge.
+
+**Corretto** — le notifiche non arrivavano mai
+- Il permesso veniva chiesto automaticamente all'avvio, ma i browser
+  ignorano le richieste non partite da un tocco dell'utente: non veniva
+  quindi mai concesso. Ora si attiva da **Impostazioni → Preferenze →
+  Notifiche**
+- Gli avvisi venivano mostrati con `new Notification()`, che su Android
+  Chrome non è utilizzabile e solleva un errore: ora passano dal service
+  worker, il metodo corretto per le app installate
+- Aggiunto il pulsante **"Prova una notifica"** per verificare subito che
+  funzioni, senza aspettare una scadenza
+- I promemoria coprono ora anche le **occorrenze successive** degli
+  eventi ricorrenti, non solo la prima
+- Riaprendo l'app dopo giorni non arriva più una raffica di avvisi
+  vecchi: quelli scaduti da oltre un'ora vengono saltati
+
+**Nuovo**
+- **Categorie e badge modificabili**: toccandoli in Impostazioni si
+  possono rinominare, cambiare colore e icona, oppure eliminare
+- Rinominando una categoria o un badge, tutti gli elementi che li usavano
+  vengono aggiornati di conseguenza (il riferimento avviene per nome)
+- Prima di eliminare viene detto quanti elementi ne sono interessati; gli
+  elementi non vengono cancellati, restano solo senza quella categoria o
+  senza quel badge
+
 ## [0.10.0] — 2026-08-24
 
 Gestione delle attività: apri/chiudi e filtro completate.
@@ -61,6 +89,34 @@ Eventi su più giorni disegnati come barre.
   compariva nell'elenco sotto: risultava solo nel giorno iniziale
 - Un evento iniziato prima del periodo visualizzato non veniva caricato
   affatto: una vacanza a cavallo di fine mese spariva dal mese successivo
+
+## [0.11.0] — 2026-08-24
+
+Notifiche funzionanti e modifica di categorie e badge.
+
+**Corretto** — le notifiche non arrivavano mai
+- Il permesso veniva chiesto automaticamente all'avvio, ma i browser
+  ignorano le richieste non partite da un tocco dell'utente: non veniva
+  quindi mai concesso. Ora si attiva da **Impostazioni → Preferenze →
+  Notifiche**
+- Gli avvisi venivano mostrati con `new Notification()`, che su Android
+  Chrome non è utilizzabile e solleva un errore: ora passano dal service
+  worker, il metodo corretto per le app installate
+- Aggiunto il pulsante **"Prova una notifica"** per verificare subito che
+  funzioni, senza aspettare una scadenza
+- I promemoria coprono ora anche le **occorrenze successive** degli
+  eventi ricorrenti, non solo la prima
+- Riaprendo l'app dopo giorni non arriva più una raffica di avvisi
+  vecchi: quelli scaduti da oltre un'ora vengono saltati
+
+**Nuovo**
+- **Categorie e badge modificabili**: toccandoli in Impostazioni si
+  possono rinominare, cambiare colore e icona, oppure eliminare
+- Rinominando una categoria o un badge, tutti gli elementi che li usavano
+  vengono aggiornati di conseguenza (il riferimento avviene per nome)
+- Prima di eliminare viene detto quanti elementi ne sono interessati; gli
+  elementi non vengono cancellati, restano solo senza quella categoria o
+  senza quel badge
 
 ## [0.10.0] — 2026-08-24
 

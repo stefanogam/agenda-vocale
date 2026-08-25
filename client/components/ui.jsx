@@ -1,5 +1,5 @@
 // client/components/ui.jsx
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { tokens, SWATCHES } from "../lib/tokens.js";
 import { ICON_KEYS, ICONS } from "../lib/icons.js";
 
@@ -20,7 +20,7 @@ export function AddButton({ label, onClick }) {
   );
 }
 
-export function FormCard({ value, onChange, onSubmit, onCancel, showIcons, placeholder, cta }) {
+export function FormCard({ value, onChange, onSubmit, onCancel, onDelete, showIcons, placeholder, cta }) {
   return (
     <div className="rounded-2xl p-4" style={{ background: tokens.surface, border: `1px solid ${tokens.border}` }}>
       <input autoFocus value={value.name} onChange={(e) => onChange({ ...value, name: e.target.value })} placeholder={placeholder}
@@ -53,6 +53,11 @@ export function FormCard({ value, onChange, onSubmit, onCancel, showIcons, place
       )}
 
       <div className="flex gap-2 mt-1">
+        {onDelete && (
+          <button onClick={onDelete} aria-label="Elimina" className="rounded-xl py-2.5 px-3" style={{ border: `1px solid ${tokens.coral}` }}>
+            <Trash2 size={14} color={tokens.coral} />
+          </button>
+        )}
         <button onClick={onCancel} className="flex-1 rounded-xl py-2.5 text-xs f-mono" style={{ border: `1px solid ${tokens.border}`, color: tokens.textSecondary }}>Annulla</button>
         <button onClick={onSubmit} className="flex-1 rounded-xl py-2.5 text-xs f-mono font-semibold" style={{ background: value.color, color: tokens.bg }}>{cta}</button>
       </div>

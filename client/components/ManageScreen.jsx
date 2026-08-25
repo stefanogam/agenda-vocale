@@ -1,18 +1,75 @@
 // client/components/ManageScreen.jsx
 import { useState, useRef } from "react";
-import { ArrowLeft, Star, Download, Upload } from "lucide-react";
+import { ArrowLeft, Star, Download, Upload, Bell, BellOff, Send } from "lucide-react";
 import { tokens, SWATCHES, REMINDER_OPTIONS, reminderLabel } from "../lib/tokens.js";
 import { ICONS, ICON_KEYS } from "../lib/icons.js";
 import { FormCard, AddButton } from "./ui.jsx";
 import { APP_VERSION } from "../lib/version.js";
 import * as store from "../lib/store.js";
+import { notificationStatus, requestNotificationPermission, sendTestNotification } from "../reminders.js";
 
 const TIMEZONES = ["Europe/Rome", "Europe/London", "America/New_York", "America/Los_Angeles", "Asia/Tokyo", "UTC"];
 
 export default function ManageScreen({ onBack, categories, badges, settings, onAddCategory, onAddBadge, onUpdateSettings, onDataRestored }) {
   const [tab, setTab] = useState("categorie");
   const [backupMsg, setBackupMsg] = useState(null);
+  const [notifState, setNotifState] = useState(() => notificationStatus());
+  const [notifMsg, setNotifMsg] = useState(null);
+
+  async function enableNotifications() {
+    const res = await requestNotificationPermission();
+    setNotifState(notificationStatus());
+    if (res === "granted") setNotifMsg({ ok: true, text: "Permesso concesso." });
+    else if (res === "denied") setNotifMsg({ ok: false, text: "Permesso negato: va riattivato dalle impostazioni del browser per questo sito." });
+    else if (res === "unsupported") setNotifMsg({ ok: false, text: "Questo browser non supporta le notifiche." });
+    else setNotifMsg({ ok: false, text: "Permesso non concesso." });
+  }
+
+  async function testNotification() {
+    const ok = await sendTestNotification();
+    setNotifMsg(ok
+      ? { ok: true, text: "Notifica inviata: dovresti vederla ora." }
+      : { ok: false, text: "Invio fallito. Su iPhone l'app va prima aggiunta alla schermata Home." });
+  }
   const fileRef = useRef(null);
+
+  async function saveCategory() {
+    if (!catForm?.name?.trim()) return;
+    if (catForm.id) await store.updateCategory(catForm.id, { name: catForm.name.trim(), color: catForm.color, icon: catForm.icon });
+    else await onAddCategory({ ...catForm, name: catForm.name.trim() });
+    setCatForm(null);
+    onDataRestored?.();
+  }
+
+  async function removeCategory() {
+    const n = await store.countItemsWithCategory(catForm.originalName);
+    const msg = n > 0
+      ? `${n} element${n === 1 ? "o usa" : "i usano"} la categoria "${catForm.originalName}".\nEliminandola resteranno senza categoria. Procedere?`
+      : `Eliminare la categoria "${catForm.originalName}"?`;
+    if (!window.confirm(msg)) return;
+    await store.deleteCategory(catForm.id);
+    setCatForm(null);
+    onDataRestored?.();
+  }
+
+  async function saveBadge() {
+    if (!badgeForm?.name?.trim()) return;
+    if (badgeForm.id) await store.updateBadge(badgeForm.id, { name: badgeForm.name.trim(), color: badgeForm.color });
+    else await onAddBadge({ ...badgeForm, name: badgeForm.name.trim() });
+    setBadgeForm(null);
+    onDataRestored?.();
+  }
+
+  async function removeBadge() {
+    const n = await store.countItemsWithBadge(badgeForm.originalName);
+    const msg = n > 0
+      ? `${n} element${n === 1 ? "o ha" : "i hanno"} il badge "${badgeForm.originalName}".\nEliminandolo verrà tolto da tutti. Procedere?`
+      : `Eliminare il badge "${badgeForm.originalName}"?`;
+    if (!window.confirm(msg)) return;
+    await store.deleteBadge(badgeForm.id);
+    setBadgeForm(null);
+    onDataRestored?.();
+  }
 
   async function handleExport() {
     try {
@@ -68,19 +125,32 @@ export default function ManageScreen({ onBack, categories, badges, settings, onA
 
       {tab === "categorie" && (
         <>
+          <p className="text-xs mb-3" style={{ color: tokens.textSecondary }}>Tocca una categoria per modificarla o eliminarla.</p>
           <div className="flex flex-col gap-2 mb-4">
             {categories.map((c) => { const Icon = ICONS[c.icon] || Star; return (
-              <div key={c.id} className="rounded-2xl px-4 py-3 flex items-center gap-3" style={{ background: tokens.surface, border: `1px solid ${tokens.border}` }}>
+              <button
+                key={c.id}
+                onClick={() => setCatForm({ id: c.id, name: c.name, color: c.color, icon: c.icon, originalName: c.name })}
+                className="rounded-2xl px-4 py-3 flex items-center gap-3 w-full text-left"
+                style={{ background: tokens.surface, border: `1px solid ${catForm?.id === c.id ? tokens.amber : tokens.border}` }}
+              >
                 <div className="rounded-full p-2" style={{ background: `${c.color}22` }}><Icon size={15} color={c.color} /></div>
                 <span className="text-sm" style={{ color: tokens.textPrimary }}>{c.name}</span>
                 <span className="ml-auto w-2.5 h-2.5 rounded-full" style={{ background: c.color }} />
-              </div>
+              </button>
             ); })}
           </div>
           {catForm ? (
-            <FormCard value={catForm} onChange={setCatForm} showIcons placeholder="Nome categoria (es. Viaggi)" cta="Crea categoria"
+            <FormCard
+              value={catForm}
+              onChange={setCatForm}
+              showIcons
+              placeholder="Nome categoria (es. Viaggi)"
+              cta={catForm.id ? "Salva" : "Crea categoria"}
               onCancel={() => setCatForm(null)}
-              onSubmit={async () => { if (!catForm.name.trim()) return; await onAddCategory(catForm); setCatForm(null); }} />
+              onSubmit={saveCategory}
+              onDelete={catForm.id ? removeCategory : undefined}
+            />
           ) : (
             <AddButton label="Nuova categoria" onClick={() => setCatForm({ name: "", color: SWATCHES[0], icon: ICON_KEYS[0] })} />
           )}
@@ -89,13 +159,29 @@ export default function ManageScreen({ onBack, categories, badges, settings, onA
 
       {tab === "badge" && (
         <>
+          <p className="text-xs mb-3" style={{ color: tokens.textSecondary }}>Tocca un badge per modificarlo o eliminarlo.</p>
           <div className="flex flex-wrap gap-2 mb-4">
-            {badges.map((b) => <span key={b.id} className="f-mono text-xs rounded-full px-3 py-1.5" style={{ background: `${b.color}22`, color: b.color }}>{b.name}</span>)}
+            {badges.map((b) => (
+              <button
+                key={b.id}
+                onClick={() => setBadgeForm({ id: b.id, name: b.name, color: b.color, originalName: b.name })}
+                className="f-mono text-xs rounded-full px-3 py-1.5"
+                style={{ background: `${b.color}22`, color: b.color, border: `1px solid ${badgeForm?.id === b.id ? b.color : "transparent"}` }}
+              >
+                {b.name}
+              </button>
+            ))}
           </div>
           {badgeForm ? (
-            <FormCard value={badgeForm} onChange={setBadgeForm} placeholder="Nome badge (es. Rimandato)" cta="Crea badge"
+            <FormCard
+              value={badgeForm}
+              onChange={setBadgeForm}
+              placeholder="Nome badge (es. Rimandato)"
+              cta={badgeForm.id ? "Salva" : "Crea badge"}
               onCancel={() => setBadgeForm(null)}
-              onSubmit={async () => { if (!badgeForm.name.trim()) return; await onAddBadge(badgeForm); setBadgeForm(null); }} />
+              onSubmit={saveBadge}
+              onDelete={badgeForm.id ? removeBadge : undefined}
+            />
           ) : (
             <AddButton label="Nuovo badge" onClick={() => setBadgeForm({ name: "", color: SWATCHES[0] })} />
           )}
@@ -125,6 +211,37 @@ export default function ManageScreen({ onBack, categories, badges, settings, onA
           </div>
 
           <div className="mt-8 pt-4" style={{ borderTop: `1px solid ${tokens.border}` }}>
+            <p className="f-mono text-[10px] uppercase tracking-wider mb-2" style={{ color: tokens.textSecondary }}>Notifiche</p>
+            <p className="text-xs mb-3" style={{ color: tokens.textSecondary }}>
+              {notifState === "granted"
+                ? "Attive. Gli avvisi arrivano mentre l'app è aperta o in secondo piano; se resta chiusa a lungo possono saltare."
+                : notifState === "denied"
+                  ? "Bloccate per questo sito. Vanno riattivate dalle impostazioni del browser."
+                  : notifState === "unsupported"
+                    ? "Questo browser non supporta le notifiche."
+                    : "Non ancora attive: il permesso va concesso da qui."}
+            </p>
+            <div className="flex gap-2 mb-2">
+              {notifState !== "granted" && (
+                <button onClick={enableNotifications} disabled={notifState === "unsupported" || notifState === "denied"} className="flex-1 rounded-xl py-2.5 flex items-center justify-center gap-2 text-xs f-mono" style={{ background: tokens.amber, color: tokens.bg, opacity: (notifState === "unsupported" || notifState === "denied") ? 0.5 : 1 }}>
+                  <Bell size={14} /> Attiva notifiche
+                </button>
+              )}
+              {notifState === "granted" && (
+                <button onClick={testNotification} className="flex-1 rounded-xl py-2.5 flex items-center justify-center gap-2 text-xs f-mono" style={{ background: tokens.surface, border: `1px solid ${tokens.border}`, color: tokens.textPrimary }}>
+                  <Send size={14} /> Prova una notifica
+                </button>
+              )}
+              {notifState === "denied" && (
+                <div className="flex-1 rounded-xl py-2.5 flex items-center justify-center gap-2 text-xs f-mono" style={{ background: tokens.surface, border: `1px solid ${tokens.border}`, color: tokens.textSecondary }}>
+                  <BellOff size={14} /> Bloccate dal browser
+                </div>
+              )}
+            </div>
+            {notifMsg && <p className="text-xs mb-2" style={{ color: notifMsg.ok ? tokens.sage : tokens.coral }}>{notifMsg.text}</p>}
+          </div>
+
+          <div className="mt-6 pt-4" style={{ borderTop: `1px solid ${tokens.border}` }}>
             <p className="f-mono text-[10px] uppercase tracking-wider mb-2" style={{ color: tokens.textSecondary }}>Backup</p>
             <p className="text-xs mb-3" style={{ color: tokens.textSecondary }}>
               I dati stanno solo su questo dispositivo. Salva un backup ogni tanto: serve
