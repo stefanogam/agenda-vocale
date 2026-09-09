@@ -37,14 +37,20 @@ export default async function handler(req, res) {
       .filter((m) => (m.supportedGenerationMethods || []).includes("generateContent"))
       .map((m) => String(m.name).replace(/^models\//, ""));
 
+    const flash = utilizzabili.filter((n) => n.includes("flash") && !/(image|tts|audio|thinking|live|embedding)/.test(n));
+    const lite = flash.filter((n) => n.includes("lite")).sort().reverse();
+    const pieni = flash.filter((n) => !n.includes("lite")).sort().reverse();
+
     return res.status(200).json({
       chiave: `presente (inizia con ${key.slice(0, 6)}…)`,
       google: "OK",
       modello_forzato: process.env.GEMINI_MODEL || "(nessuno: scelta automatica)",
-      modelli_flash: utilizzabili.filter((n) => n.includes("flash")),
+      ordine_di_preferenza: [...lite, ...pieni].slice(0, 6),
+      modelli_flash_lite: lite,
+      modelli_flash: pieni,
       totale_utilizzabili: utilizzabili.length,
       spiegazione:
-        "Se qui compaiono dei modelli Flash, la dettatura dovrebbe funzionare. In caso contrario, imposta GEMINI_MODEL su Vercel con uno dei nomi elencati.",
+        "Vengono provati nell'ordine indicato: prima le varianti Flash-Lite, che sul piano gratuito concedono molte più richieste al giorno. Se la quota di uno è esaurita si passa al successivo.",
     });
   } catch (err) {
     return res.status(200).json({

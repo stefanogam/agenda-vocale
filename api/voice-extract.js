@@ -18,7 +18,8 @@ const API_BASE = "https://generativelanguage.googleapis.com/v1beta";
 // ritirati: fissarne uno nel codice porta prima o poi a un 404.
 // Qui si chiede a Google cosa è davvero disponibile per questa chiave e
 // se ne sceglie uno, memorizzandolo finché la funzione resta calda.
-let modelloRisolto = null;
+let modelliCandidati = null;   // elenco ordinato, dal più conveniente
+let modelloFunzionante = null; // il primo che ha risposto bene
 
 async function elencaModelli(key) {
   const r = await fetch(`${API_BASE}/models`, { headers: { "x-goog-api-key": key } });
@@ -29,52 +30,31 @@ async function elencaModelli(key) {
     .map((m) => String(m.name).replace(/^models\//, ""));
 }
 
-function scegliModello(nomi) {
+// Ordine di preferenza pensato per il piano gratuito: le varianti
+// "Flash-Lite" concedono centinaia di richieste al giorno, mentre i Flash
+// pieni ne concedono una ventina. Per interpretare una frase di agenda la
+// differenza di qualità è trascurabile, quella di quota no.
+function ordinaCandidati(nomi) {
   const flash = nomi.filter((n) => n.includes("flash"));
-  // via le varianti non adatte: anteprime, sperimentali, immagini, audio
-  const stabili = flash.filter((n) => !/(preview|exp|image|tts|audio|thinking|live|embedding)/.test(n));
-  const pool = (stabili.length ? stabili : flash).slice().sort().reverse(); // il più recente per primo
-  const pieni = pool.filter((n) => !n.includes("lite"));
-  return pieni[0] || pool[0] || nomi[0] || null;
+  const escludi = /(image|tts|audio|thinking|live|embedding)/;
+  const utili = flash.filter((n) => !escludi.test(n));
+
+  const stabili = utili.filter((n) => !/(preview|exp)/.test(n));
+  const anteprime = utili.filter((n) => /(preview|exp)/.test(n));
+  const recentiPrima = (a) => a.slice().sort().reverse();
+
+  const lite = recentiPrima(stabili.filter((n) => n.includes("lite")));
+  const pieni = recentiPrima(stabili.filter((n) => !n.includes("lite")));
+
+  return [...lite, ...pieni, ...recentiPrima(anteprime)];
 }
 
-async function risolviModello(key) {
-  if (process.env.GEMINI_MODEL) return process.env.GEMINI_MODEL;
-  if (modelloRisolto) return modelloRisolto;
-  const nomi = await elencaModelli(key);
-  modelloRisolto = scegliModello(nomi);
-  return modelloRisolto;
+async function candidati(key) {
+  if (process.env.GEMINI_MODEL) return [process.env.GEMINI_MODEL];
+  if (modelliCandidati) return modelliCandidati;
+  modelliCandidati = ordinaCandidati(await elencaModelli(key));
+  return modelliCandidati;
 }
-
-// Gemini vuole i tipi in maiuscolo e non accetta tutto lo schema JSON
-// standard: niente null, si usano stringhe vuote per i campi assenti e
-// si normalizza qui sotto.
-const RESPONSE_SCHEMA = {
-  type: "OBJECT",
-  properties: {
-    title: { type: "STRING", description: "Titolo breve e chiaro, senza le formule di comando (niente 'ricordami di')." },
-    type: {
-      type: "STRING",
-      enum: ["appuntamento", "scadenza", "radar", "todo"],
-      description:
-        "'scadenza' se c'è una data limite (consegna, pagamento, rinnovo). " +
-        "'radar' se va solo tenuto d'occhio senza data precisa ('ogni tanto', 'controllare se'). " +
-        "'todo' se è un'attività da fare senza orario. 'appuntamento' per tutto il resto.",
-    },
-    category: { type: "STRING", description: "Una delle categorie esistenti dell'utente. Stringa vuota se nessuna è pertinente." },
-    all_day: { type: "BOOLEAN", description: "true se non è stato indicato un orario preciso." },
-    start_at: { type: "STRING", description: "Data e ora locali in formato YYYY-MM-DDTHH:MM. Stringa vuota se non deducibile o per i radar." },
-    end_date: { type: "STRING", description: "YYYY-MM-DD, solo per eventi su più giorni consecutivi. Stringa vuota altrimenti." },
-    rrule: { type: "STRING", description: "Regola RFC5545 se si ripete, es. 'FREQ=WEEKLY;INTERVAL=1;BYDAY=MO,TU'. Per i radar è la cadenza di controllo. Stringa vuota se non si ripete." },
-    recurrence_ends_at: { type: "STRING", description: "YYYY-MM-DD se la ripetizione ha una fine dichiarata. Stringa vuota altrimenti." },
-    badges: { type: "ARRAY", items: { type: "STRING" }, description: "Badge esistenti pertinenti. Array vuoto se nessuno." },
-    notes: { type: "STRING", description: "Dettagli aggiuntivi detti dall'utente. Stringa vuota se non ce ne sono." },
-    confidence: { type: "STRING", enum: ["high", "medium", "low"], description: "'low' se qualcosa è ambiguo: l'app chiederà di ripetere invece di indovinare." },
-    clarification_question: { type: "STRING", description: "Obbligatoria se confidence è 'low': domanda breve su cosa non è chiaro. Stringa vuota altrimenti." },
-  },
-  required: ["title", "type", "all_day", "confidence"],
-  propertyOrdering: ["title", "type", "category", "all_day", "start_at", "end_date", "rrule", "recurrence_ends_at", "badges", "notes", "confidence", "clarification_question"],
-};
 
 const GIORNI = ["domenica", "lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato"];
 
@@ -151,55 +131,65 @@ export default async function handler(req, res) {
     });
   }
 
+  // Google indica nel corpo dell'errore se il limite superato è quello al
+  // minuto o quello giornaliero: cambia molto cosa dire all'utente
+  function leggiQuota(testo) {
+    const perMinuto = /PerMinute|per minute|RPM/i.test(testo);
+    const attesa = testo.match(/"retryDelay"\s*:\s*"(\d+)s"/);
+    return { perMinuto, attesaSec: attesa ? Number(attesa[1]) : null };
+  }
+
   try {
-    let model = await risolviModello(key);
-    if (!model) {
+    let lista = await candidati(key);
+    // se un modello ha già funzionato in precedenza, si riparte da quello
+    if (modelloFunzionante) lista = [modelloFunzionante, ...lista.filter((m) => m !== modelloFunzionante)];
+    if (lista.length === 0) {
       return res.status(502).json({ error: "Nessun modello disponibile per questa chiave API." });
     }
 
-    let resp = await chiama(model);
+    let ultimoErrore = null;
+    let ultimoStato = null;
 
-    // 404 = il nome del modello non è più valido: si rilegge il catalogo
-    // e si riprova una volta, invece di fallire finché non si mette mano
-    // al codice
-    if (resp.status === 404 && !process.env.GEMINI_MODEL) {
-      modelloRisolto = null;
-      const model2 = await risolviModello(key);
-      if (model2 && model2 !== model) {
-        model = model2;
-        resp = await chiama(model);
+    // Si prova un modello alla volta: se uno ha la quota esaurita o non
+    // esiste più, si passa al successivo invece di arrendersi
+    for (const model of lista.slice(0, 4)) {
+      const resp = await chiama(model);
+
+      if (resp.ok) {
+        modelloFunzionante = model;
+        const data = await resp.json();
+        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!text) return res.status(502).json({ error: "Risposta vuota dal modello" });
+        return res.status(200).json(normalize(JSON.parse(text), transcript));
       }
+
+      ultimoStato = resp.status;
+      ultimoErrore = await resp.text();
+      console.error("Gemini:", resp.status, "modello:", model, ultimoErrore.slice(0, 300));
+
+      if (resp.status === 429 || resp.status === 404) {
+        if (model === modelloFunzionante) modelloFunzionante = null;
+        modelliCandidati = null; // il catalogo verrà riletto la prossima volta
+        continue;                // prova il modello successivo
+      }
+      break; // errori diversi (chiave, richiesta malformata) non migliorano cambiando modello
     }
 
-    if (!resp.ok) {
-      const errText = await resp.text();
-      console.error("Errore Gemini:", resp.status, "modello:", model, errText);
-
-      if (resp.status === 429) {
-        return res.status(502).json({ error: "Limite giornaliero di richieste raggiunto. Riprova più tardi o crea l'elemento manualmente." });
-      }
-      if (resp.status === 404) {
-        const disponibili = (await elencaModelli(key)).filter((n) => n.includes("flash")).slice(0, 6);
-        return res.status(502).json({
-          error: `Modello "${model}" non disponibile.` +
-            (disponibili.length
-              ? ` Modelli utilizzabili: ${disponibili.join(", ")}. Impostane uno nella variabile GEMINI_MODEL su Vercel.`
-              : " Nessun modello Flash disponibile per questa chiave."),
-        });
-      }
-      if (resp.status === 400 || resp.status === 403) {
-        return res.status(502).json({ error: "Chiave API rifiutata da Google. Controlla che sia corretta e attiva." });
-      }
-      return res.status(502).json({ error: "Interpretazione non riuscita, riprova." });
+    if (ultimoStato === 429) {
+      const { perMinuto, attesaSec } = leggiQuota(ultimoErrore || "");
+      return res.status(502).json({
+        error: perMinuto
+          ? `Troppe richieste ravvicinate. Riprova tra ${attesaSec || 30} secondi.`
+          : "Quota giornaliera esaurita su tutti i modelli disponibili. Riprova domani, oppure crea l'elemento manualmente con \"+\".",
+      });
     }
-
-    const data = await resp.json();
-    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!text) {
-      return res.status(502).json({ error: "Risposta vuota dal modello" });
+    if (ultimoStato === 404) {
+      return res.status(502).json({ error: "Nessun modello utilizzabile. Apri /api/voice-check per vedere quali sono disponibili." });
     }
-
-    return res.status(200).json(normalize(JSON.parse(text), transcript));
+    if (ultimoStato === 400 || ultimoStato === 403) {
+      return res.status(502).json({ error: "Chiave API rifiutata da Google. Controlla che sia corretta e attiva." });
+    }
+    return res.status(502).json({ error: "Interpretazione non riuscita, riprova." });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: "Errore interno" });

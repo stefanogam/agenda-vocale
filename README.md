@@ -80,9 +80,18 @@ quali sono disponibili per la tua chiave e ne sceglie uno (il Flash più
 recente tra quelli stabili). I nomi dei modelli vengono ritirati spesso,
 e fissarne uno porterebbe prima o poi a un errore 404.
 
+L'ordine di preferenza mette per prime le varianti **Flash-Lite**: sul
+piano gratuito concedono molte più richieste al giorno (centinaia contro
+una ventina), e per interpretare una frase di agenda la differenza di
+qualità è trascurabile. Se la quota di un modello è esaurita, la funzione
+passa da sola al successivo.
+
 Se vuoi imporne uno preciso, aggiungi la variabile `GEMINI_MODEL` con il
-nome esatto. Le varianti *Flash-Lite* concedono molte più richieste
-giornaliere sul piano gratuito, a fronte di una qualità un po' inferiore.
+nome esatto — così però si perde il ripiego automatico.
+
+Se la quota si esaurisce comunque, attivare la fatturazione su Google
+alza i limiti drasticamente; per uso personale il costo è di pochi
+centesimi al mese.
 
 ### Se la dettatura non funziona
 

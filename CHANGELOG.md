@@ -6,6 +6,23 @@ Ogni modifica al progetto incrementa il numero di versione qui sotto e in
 - **MINOR** (0.X.0): nuove funzionalità che non rompono quelle esistenti
 - **MAJOR** (X.0.0): cambiamenti che rompono la compatibilità con l'uso precedente
 
+## [0.12.2] — 2026-09-09
+
+Correzione: quota giornaliera esaurita subito.
+
+- La scelta automatica preferiva il Flash "pieno" al Flash-Lite per la
+  qualità, ma sul piano gratuito il primo concede circa **20 richieste al
+  giorno** e il secondo diverse centinaia. Per interpretare una frase di
+  agenda la differenza di qualità è trascurabile: ora **Flash-Lite viene
+  provato per primo**
+- Se un modello ha la quota esaurita o non esiste più, la funzione **passa
+  da sola al successivo** invece di arrendersi
+- Il modello che ha funzionato viene ricordato, così le chiamate
+  successive non ripartono dal principio
+- Distinzione tra limite **al minuto** (dice tra quanti secondi riprovare)
+  e limite **giornaliero**
+- `/api/voice-check` mostra ora l'ordine di preferenza dei modelli
+
 ## [0.12.1] — 2026-09-09
 
 Correzione: la dettatura restituiva "interpretazione non riuscita".
@@ -129,6 +146,23 @@ Eventi su più giorni disegnati come barre.
   compariva nell'elenco sotto: risultava solo nel giorno iniziale
 - Un evento iniziato prima del periodo visualizzato non veniva caricato
   affatto: una vacanza a cavallo di fine mese spariva dal mese successivo
+
+## [0.12.2] — 2026-09-09
+
+Correzione: quota giornaliera esaurita subito.
+
+- La scelta automatica preferiva il Flash "pieno" al Flash-Lite per la
+  qualità, ma sul piano gratuito il primo concede circa **20 richieste al
+  giorno** e il secondo diverse centinaia. Per interpretare una frase di
+  agenda la differenza di qualità è trascurabile: ora **Flash-Lite viene
+  provato per primo**
+- Se un modello ha la quota esaurita o non esiste più, la funzione **passa
+  da sola al successivo** invece di arrendersi
+- Il modello che ha funzionato viene ricordato, così le chiamate
+  successive non ripartono dal principio
+- Distinzione tra limite **al minuto** (dice tra quanti secondi riprovare)
+  e limite **giornaliero**
+- `/api/voice-check` mostra ora l'ordine di preferenza dei modelli
 
 ## [0.12.1] — 2026-09-09
 
