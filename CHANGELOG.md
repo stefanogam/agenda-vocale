@@ -6,6 +6,17 @@ Ogni modifica al progetto incrementa il numero di versione qui sotto e in
 - **MINOR** (0.X.0): nuove funzionalità che non rompono quelle esistenti
 - **MAJOR** (X.0.0): cambiamenti che rompono la compatibilità con l'uso precedente
 
+## [0.12.3] — 2026-09-09
+
+Correzione: la dettatura rispondeva sempre "errore interno".
+
+- Riscrivendo la funzione nella 0.12.1 avevo cancellato per sbaglio la
+  definizione dello schema di risposta (`RESPONSE_SCHEMA`), che il codice
+  continuava a usare: ogni chiamata andava quindi in eccezione. Ripristinato
+- La funzione è ora collaudata eseguendola davvero con una API simulata,
+  non solo verificandone la sintassi: il controllo delle parentesi non
+  poteva accorgersi di un riferimento a una variabile inesistente
+
 ## [0.12.2] — 2026-09-09
 
 Correzione: quota giornaliera esaurita subito.
@@ -146,6 +157,17 @@ Eventi su più giorni disegnati come barre.
   compariva nell'elenco sotto: risultava solo nel giorno iniziale
 - Un evento iniziato prima del periodo visualizzato non veniva caricato
   affatto: una vacanza a cavallo di fine mese spariva dal mese successivo
+
+## [0.12.3] — 2026-09-09
+
+Correzione: la dettatura rispondeva sempre "errore interno".
+
+- Riscrivendo la funzione nella 0.12.1 avevo cancellato per sbaglio la
+  definizione dello schema di risposta (`RESPONSE_SCHEMA`), che il codice
+  continuava a usare: ogni chiamata andava quindi in eccezione. Ripristinato
+- La funzione è ora collaudata eseguendola davvero con una API simulata,
+  non solo verificandone la sintassi: il controllo delle parentesi non
+  poteva accorgersi di un riferimento a una variabile inesistente
 
 ## [0.12.2] — 2026-09-09
 

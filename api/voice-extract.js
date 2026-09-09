@@ -10,7 +10,8 @@
 //
 // Variabili d'ambiente:
 //   GEMINI_API_KEY  (obbligatoria)
-//   GEMINI_MODEL    (facoltativa, default "gemini-2.5-flash")
+//   GEMINI_MODEL    (facoltativa: senza, il modello viene scelto
+//                    automaticamente tra quelli disponibili)
 
 const API_BASE = "https://generativelanguage.googleapis.com/v1beta";
 
@@ -55,6 +56,36 @@ async function candidati(key) {
   modelliCandidati = ordinaCandidati(await elencaModelli(key));
   return modelliCandidati;
 }
+
+// Gemini vuole i tipi in maiuscolo e non accetta tutto lo schema JSON
+// standard: niente null, si usano stringhe vuote per i campi assenti e
+// si normalizza poi in normalize().
+const RESPONSE_SCHEMA = {
+  type: "OBJECT",
+  properties: {
+    title: { type: "STRING", description: "Titolo breve e chiaro, senza le formule di comando (niente 'ricordami di')." },
+    type: {
+      type: "STRING",
+      enum: ["appuntamento", "scadenza", "radar", "todo"],
+      description:
+        "'scadenza' se c'è una data limite (consegna, pagamento, rinnovo). " +
+        "'radar' se va solo tenuto d'occhio senza data precisa ('ogni tanto', 'controllare se'). " +
+        "'todo' se è un'attività da fare senza orario. 'appuntamento' per tutto il resto.",
+    },
+    category: { type: "STRING", description: "Una delle categorie esistenti dell'utente. Stringa vuota se nessuna è pertinente." },
+    all_day: { type: "BOOLEAN", description: "true se non è stato indicato un orario preciso." },
+    start_at: { type: "STRING", description: "Data e ora locali in formato YYYY-MM-DDTHH:MM. Stringa vuota se non deducibile o per i radar." },
+    end_date: { type: "STRING", description: "YYYY-MM-DD, solo per eventi su più giorni consecutivi. Stringa vuota altrimenti." },
+    rrule: { type: "STRING", description: "Regola RFC5545 se si ripete, es. 'FREQ=WEEKLY;INTERVAL=1;BYDAY=MO,TU'. Per i radar è la cadenza di controllo. Stringa vuota se non si ripete." },
+    recurrence_ends_at: { type: "STRING", description: "YYYY-MM-DD se la ripetizione ha una fine dichiarata. Stringa vuota altrimenti." },
+    badges: { type: "ARRAY", items: { type: "STRING" }, description: "Badge esistenti pertinenti. Array vuoto se nessuno." },
+    notes: { type: "STRING", description: "Dettagli aggiuntivi detti dall'utente. Stringa vuota se non ce ne sono." },
+    confidence: { type: "STRING", enum: ["high", "medium", "low"], description: "'low' se qualcosa è ambiguo: l'app chiederà di ripetere invece di indovinare." },
+    clarification_question: { type: "STRING", description: "Obbligatoria se confidence è 'low': domanda breve su cosa non è chiaro. Stringa vuota altrimenti." },
+  },
+  required: ["title", "type", "all_day", "confidence"],
+  propertyOrdering: ["title", "type", "category", "all_day", "start_at", "end_date", "rrule", "recurrence_ends_at", "badges", "notes", "confidence", "clarification_question"],
+};
 
 const GIORNI = ["domenica", "lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato"];
 
