@@ -12,7 +12,39 @@
 //   GEMINI_API_KEY  (obbligatoria)
 //   GEMINI_MODEL    (facoltativa, default "gemini-2.5-flash")
 
-const DEFAULT_MODEL = "gemini-2.5-flash";
+const API_BASE = "https://generativelanguage.googleapis.com/v1beta";
+
+// Il catalogo dei modelli di Google cambia spesso e i nomi vengono
+// ritirati: fissarne uno nel codice porta prima o poi a un 404.
+// Qui si chiede a Google cosa è davvero disponibile per questa chiave e
+// se ne sceglie uno, memorizzandolo finché la funzione resta calda.
+let modelloRisolto = null;
+
+async function elencaModelli(key) {
+  const r = await fetch(`${API_BASE}/models`, { headers: { "x-goog-api-key": key } });
+  if (!r.ok) return [];
+  const d = await r.json();
+  return (d.models || [])
+    .filter((m) => (m.supportedGenerationMethods || []).includes("generateContent"))
+    .map((m) => String(m.name).replace(/^models\//, ""));
+}
+
+function scegliModello(nomi) {
+  const flash = nomi.filter((n) => n.includes("flash"));
+  // via le varianti non adatte: anteprime, sperimentali, immagini, audio
+  const stabili = flash.filter((n) => !/(preview|exp|image|tts|audio|thinking|live|embedding)/.test(n));
+  const pool = (stabili.length ? stabili : flash).slice().sort().reverse(); // il più recente per primo
+  const pieni = pool.filter((n) => !n.includes("lite"));
+  return pieni[0] || pool[0] || nomi[0] || null;
+}
+
+async function risolviModello(key) {
+  if (process.env.GEMINI_MODEL) return process.env.GEMINI_MODEL;
+  if (modelloRisolto) return modelloRisolto;
+  const nomi = await elencaModelli(key);
+  modelloRisolto = scegliModello(nomi);
+  return modelloRisolto;
+}
 
 // Gemini vuole i tipi in maiuscolo e non accetta tutto lo schema JSON
 // standard: niente null, si usano stringhe vuote per i campi assenti e
@@ -102,36 +134,63 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "GEMINI_API_KEY non configurata" });
   }
 
-  const model = process.env.GEMINI_MODEL || DEFAULT_MODEL;
+  const key = process.env.GEMINI_API_KEY;
+
+  async function chiama(model) {
+    return fetch(`${API_BASE}/models/${model}:generateContent`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-goog-api-key": key },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: buildPrompt({ transcript, now, timezone, categories, badges }) }] }],
+        generationConfig: {
+          responseMimeType: "application/json",
+          responseSchema: RESPONSE_SCHEMA,
+          temperature: 0,
+        },
+      }),
+    });
+  }
 
   try {
-    const resp = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": process.env.GEMINI_API_KEY,
-        },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: buildPrompt({ transcript, now, timezone, categories, badges }) }] }],
-          generationConfig: {
-            responseMimeType: "application/json",
-            responseSchema: RESPONSE_SCHEMA,
-            temperature: 0,
-          },
-        }),
+    let model = await risolviModello(key);
+    if (!model) {
+      return res.status(502).json({ error: "Nessun modello disponibile per questa chiave API." });
+    }
+
+    let resp = await chiama(model);
+
+    // 404 = il nome del modello non è più valido: si rilegge il catalogo
+    // e si riprova una volta, invece di fallire finché non si mette mano
+    // al codice
+    if (resp.status === 404 && !process.env.GEMINI_MODEL) {
+      modelloRisolto = null;
+      const model2 = await risolviModello(key);
+      if (model2 && model2 !== model) {
+        model = model2;
+        resp = await chiama(model);
       }
-    );
+    }
 
     if (!resp.ok) {
       const errText = await resp.text();
-      console.error("Errore Gemini:", resp.status, errText);
-      // 429 = quota giornaliera esaurita: merita un messaggio dedicato
-      const messaggio = resp.status === 429
-        ? "Limite giornaliero di richieste raggiunto. Riprova più tardi o crea l'elemento manualmente."
-        : "Interpretazione non riuscita, riprova.";
-      return res.status(502).json({ error: messaggio });
+      console.error("Errore Gemini:", resp.status, "modello:", model, errText);
+
+      if (resp.status === 429) {
+        return res.status(502).json({ error: "Limite giornaliero di richieste raggiunto. Riprova più tardi o crea l'elemento manualmente." });
+      }
+      if (resp.status === 404) {
+        const disponibili = (await elencaModelli(key)).filter((n) => n.includes("flash")).slice(0, 6);
+        return res.status(502).json({
+          error: `Modello "${model}" non disponibile.` +
+            (disponibili.length
+              ? ` Modelli utilizzabili: ${disponibili.join(", ")}. Impostane uno nella variabile GEMINI_MODEL su Vercel.`
+              : " Nessun modello Flash disponibile per questa chiave."),
+        });
+      }
+      if (resp.status === 400 || resp.status === 403) {
+        return res.status(502).json({ error: "Chiave API rifiutata da Google. Controlla che sia corretta e attiva." });
+      }
+      return res.status(502).json({ error: "Interpretazione non riuscita, riprova." });
     }
 
     const data = await resp.json();

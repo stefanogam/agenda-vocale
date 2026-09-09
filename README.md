@@ -75,10 +75,20 @@ dell'app sì.
 3. In produzione (Vercel): Project Settings → Environment Variables →
    aggiungi `GEMINI_API_KEY`, poi fai "Redeploy" perché venga letta
 
-Facoltativo: `GEMINI_MODEL` per cambiare modello (default
-`gemini-2.5-flash`). I limiti giornalieri del piano gratuito variano
-parecchio da modello a modello — le varianti *Flash-Lite* ne concedono
-molti di più.
+Il modello **non è fissato nel codice**: la funzione chiede a Google
+quali sono disponibili per la tua chiave e ne sceglie uno (il Flash più
+recente tra quelli stabili). I nomi dei modelli vengono ritirati spesso,
+e fissarne uno porterebbe prima o poi a un errore 404.
+
+Se vuoi imporne uno preciso, aggiungi la variabile `GEMINI_MODEL` con il
+nome esatto. Le varianti *Flash-Lite* concedono molte più richieste
+giornaliere sul piano gratuito, a fronte di una qualità un po' inferiore.
+
+### Se la dettatura non funziona
+
+Apri **`/api/voice-check`** sull'indirizzo dell'app (es.
+`https://tuo-progetto.vercel.app/api/voice-check`): dice se la chiave è
+configurata, se Google la accetta e quali modelli sono disponibili.
 
 ### Due avvertenze sul piano gratuito
 

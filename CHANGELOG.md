@@ -6,6 +6,23 @@ Ogni modifica al progetto incrementa il numero di versione qui sotto e in
 - **MINOR** (0.X.0): nuove funzionalità che non rompono quelle esistenti
 - **MAJOR** (X.0.0): cambiamenti che rompono la compatibilità con l'uso precedente
 
+## [0.12.1] — 2026-09-09
+
+Correzione: la dettatura restituiva "interpretazione non riuscita".
+
+- La causa era un **404 da Google**: il modello `gemini-2.5-flash` fissato
+  nel codice non è più valido. I nomi dei modelli vengono ritirati spesso
+- Il modello non è più scritto nel codice: la funzione **chiede a Google
+  quali sono disponibili** per la chiave e sceglie il Flash stabile più
+  recente. Se un nome viene ritirato, al primo 404 rilegge il catalogo e
+  riprova da sola
+- Messaggi di errore ora distinti: quota esaurita, chiave rifiutata,
+  modello non disponibile (con l'elenco di quelli utilizzabili)
+- Nuovo endpoint di diagnostica **`/api/voice-check`**: aperto nel
+  browser dice se la chiave è configurata, se Google la accetta e quali
+  modelli sono disponibili
+- `GEMINI_MODEL` resta disponibile per imporre un modello preciso
+
 ## [0.12.0] — 2026-08-25
 
 L'interpretazione della voce passa a Gemini Flash.
@@ -112,6 +129,23 @@ Eventi su più giorni disegnati come barre.
   compariva nell'elenco sotto: risultava solo nel giorno iniziale
 - Un evento iniziato prima del periodo visualizzato non veniva caricato
   affatto: una vacanza a cavallo di fine mese spariva dal mese successivo
+
+## [0.12.1] — 2026-09-09
+
+Correzione: la dettatura restituiva "interpretazione non riuscita".
+
+- La causa era un **404 da Google**: il modello `gemini-2.5-flash` fissato
+  nel codice non è più valido. I nomi dei modelli vengono ritirati spesso
+- Il modello non è più scritto nel codice: la funzione **chiede a Google
+  quali sono disponibili** per la chiave e sceglie il Flash stabile più
+  recente. Se un nome viene ritirato, al primo 404 rilegge il catalogo e
+  riprova da sola
+- Messaggi di errore ora distinti: quota esaurita, chiave rifiutata,
+  modello non disponibile (con l'elenco di quelli utilizzabili)
+- Nuovo endpoint di diagnostica **`/api/voice-check`**: aperto nel
+  browser dice se la chiave è configurata, se Google la accetta e quali
+  modelli sono disponibili
+- `GEMINI_MODEL` resta disponibile per imporre un modello preciso
 
 ## [0.12.0] — 2026-08-25
 
