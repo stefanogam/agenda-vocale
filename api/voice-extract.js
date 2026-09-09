@@ -82,22 +82,26 @@ const RESPONSE_SCHEMA = {
     notes: { type: "STRING", description: "Dettagli aggiuntivi detti dall'utente. Stringa vuota se non ce ne sono." },
     confidence: { type: "STRING", enum: ["high", "medium", "low"], description: "'low' se qualcosa è ambiguo: l'app chiederà di ripetere invece di indovinare." },
     clarification_question: { type: "STRING", description: "Obbligatoria se confidence è 'low': domanda breve su cosa non è chiaro. Stringa vuota altrimenti." },
-    action: {
-      type: "STRING",
-      enum: ["crea", "aggiungi_sotto", "completa", "riapri"],
+    operations: {
+      type: "ARRAY",
       description:
-        "Cosa vuole fare l'utente. 'crea' (predefinito) per un elemento nuovo. " +
-        "'aggiungi_sotto' per una sotto-attività di una esistente. " +
-        "'completa' per segnare fatta un'attività esistente, 'riapri' per il contrario. " +
-        "Usa i valori diversi da 'crea' SOLO se nell'elenco delle attività esistenti c'è una corrispondenza chiara.",
-    },
-    target_number: {
-      type: "STRING",
-      description: "Numero dell'attività esistente su cui agire (es. '1.2'), copiato esattamente dall'elenco fornito. Stringa vuota se action è 'crea'.",
+        "Operazioni su attività GIÀ ESISTENTI. Array vuoto se l'utente vuole creare qualcosa di nuovo " +
+        "(in quel caso valgono i campi qui sopra). Un solo comando può contenere PIÙ operazioni: " +
+        "\"aggiungi pane, latte e uova sotto la spesa\" produce tre elementi, uno per ciascun prodotto.",
+      items: {
+        type: "OBJECT",
+        properties: {
+          action: { type: "STRING", enum: ["aggiungi_sotto", "completa", "riapri"] },
+          target_number: { type: "STRING", description: "Numero dell'attività esistente coinvolta (es. '1.2'), copiato esattamente dall'elenco fornito. Per 'aggiungi_sotto' è il genitore." },
+          title: { type: "STRING", description: "Titolo della nuova sotto-attività. Solo per 'aggiungi_sotto', altrimenti stringa vuota." },
+        },
+        required: ["action", "target_number"],
+        propertyOrdering: ["action", "target_number", "title"],
+      },
     },
   },
   required: ["title", "type", "all_day", "confidence"],
-  propertyOrdering: ["action", "target_number", "title", "type", "category", "all_day", "start_at", "end_date", "rrule", "recurrence_ends_at", "badges", "notes", "confidence", "clarification_question"],
+  propertyOrdering: ["operations", "title", "type", "category", "all_day", "start_at", "end_date", "rrule", "recurrence_ends_at", "badges", "notes", "confidence", "clarification_question"],
 };
 
 const GIORNI = ["domenica", "lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato"];
@@ -116,11 +120,15 @@ function buildPrompt({ transcript, now, timezone, categories, badges, context, t
 
   const elenco = (todos || []).length
     ? `\nAttività già presenti (numero e titolo):\n${todos.map((t) => `${t.number} ${t.title}${t.done ? " [già fatta]" : ""}`).join("\n")}\n
-Se la frase si riferisce a una di queste, imposta "action" e copia il suo numero in "target_number":
-- "aggiungi il pane sotto la spesa" → action "aggiungi_sotto", target_number il numero della spesa, title "Pane"
-- "segna il latte come fatto" / "ho fatto il bagno" → action "completa", target_number quello corrispondente
-- "il pane non l'ho ancora preso" → action "riapri"
-Se non c'è una corrispondenza chiara, usa action "crea".`
+Se la frase si riferisce a queste, riempi "operations" copiando i numeri dall'elenco.
+Un comando può generare PIÙ operazioni:
+- "aggiungi il pane sotto la spesa" → una operazione: aggiungi_sotto, target il numero della spesa, title "Pane"
+- "aggiungi pane, latte e uova sotto la spesa" → TRE operazioni aggiungi_sotto con lo stesso target e title diversi
+- "segna pane e latte come fatti" → DUE operazioni completa, una per ciascuno
+- "ho fatto il bagno" → una operazione completa
+- "il pane non l'ho ancora preso" → una operazione riapri
+Elenca i prodotti separati da virgole o da "e" come operazioni distinte, una per ciascuno.
+Se la frase non si riferisce a nulla di esistente, lascia "operations" vuoto e compila i campi di creazione.`
     : "";
 
   return `Sei il motore di interpretazione vocale di un'app di agenda personale italiana.
@@ -160,8 +168,11 @@ function normalize(raw, transcript) {
     recurrence_ends_at: vuoto(raw.recurrence_ends_at),
     badges: Array.isArray(raw.badges) ? raw.badges.filter(Boolean) : [],
     notes: vuoto(raw.notes),
-    action: raw.action || "crea",
-    target_number: vuoto(raw.target_number),
+    operations: Array.isArray(raw.operations)
+      ? raw.operations
+          .filter((o) => o && o.action)
+          .map((o) => ({ action: o.action, target_number: (o.target_number || "").trim(), title: (o.title || "").trim() }))
+      : [],
     confidence: raw.confidence || "medium",
     clarification_question: vuoto(raw.clarification_question),
     transcript,

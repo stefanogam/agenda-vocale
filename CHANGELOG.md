@@ -6,6 +6,21 @@ Ogni modifica al progetto incrementa il numero di versione qui sotto e in
 - **MINOR** (0.X.0): nuove funzionalità che non rompono quelle esistenti
 - **MAJOR** (X.0.0): cambiamenti che rompono la compatibilità con l'uso precedente
 
+## [0.14.0] — 2026-09-09
+
+Comandi vocali multipli sui to-do.
+
+- Un solo comando può ora agire su **più sotto-attività insieme**:
+  *"aggiungi pane, latte e uova sotto la spesa"* ne crea tre,
+  *"segna pane e latte come fatti"* ne spunta due
+- Funzionano anche i comandi misti: *"aggiungi il burro sotto la spesa e
+  segna il pane come fatto"*
+- Il riepilogo finale dice esattamente cosa è stato fatto, e segnala a
+  parte le voci che non è riuscito a trovare, invece di fallire in blocco
+- Le attività già nello stato richiesto non vengono ritoccate
+- I dati vengono ricaricati una volta sola a fine comando, non a ogni
+  singola operazione
+
 ## [0.13.0] — 2026-09-09
 
 La dettatura tiene conto della sezione aperta, e comanda i to-do.
@@ -177,6 +192,21 @@ Eventi su più giorni disegnati come barre.
   compariva nell'elenco sotto: risultava solo nel giorno iniziale
 - Un evento iniziato prima del periodo visualizzato non veniva caricato
   affatto: una vacanza a cavallo di fine mese spariva dal mese successivo
+
+## [0.14.0] — 2026-09-09
+
+Comandi vocali multipli sui to-do.
+
+- Un solo comando può ora agire su **più sotto-attività insieme**:
+  *"aggiungi pane, latte e uova sotto la spesa"* ne crea tre,
+  *"segna pane e latte come fatti"* ne spunta due
+- Funzionano anche i comandi misti: *"aggiungi il burro sotto la spesa e
+  segna il pane come fatto"*
+- Il riepilogo finale dice esattamente cosa è stato fatto, e segnala a
+  parte le voci che non è riuscito a trovare, invece di fallire in blocco
+- Le attività già nello stato richiesto non vengono ritoccate
+- I dati vengono ricaricati una volta sola a fine comando, non a ogni
+  singola operazione
 
 ## [0.13.0] — 2026-09-09
 

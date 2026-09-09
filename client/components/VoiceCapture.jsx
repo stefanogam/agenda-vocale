@@ -10,7 +10,7 @@ import PreviewSheet from "./PreviewSheet.jsx";
 const SpeechRecognitionAPI =
   typeof window !== "undefined" ? window.SpeechRecognition || window.webkitSpeechRecognition : null;
 
-export default function VoiceCapture({ categories, badges, settings, defaultReminderMinutes, context, todoRows = [], onAddSubtask, onToggleTodo, onConfirm }) {
+export default function VoiceCapture({ categories, badges, settings, defaultReminderMinutes, context, todoRows = [], onAddSubtask, onToggleTodo, onRefresh, onConfirm }) {
   const [phase, setPhase] = useState("idle"); // idle | listening | processing | preview | clarify | unsupported | error
   const [errorMsg, setErrorMsg] = useState(null);
   const [doneMsg, setDoneMsg] = useState(null);
@@ -97,28 +97,57 @@ export default function VoiceCapture({ categories, badges, settings, defaultRemi
       const data = await res.json();
 
       // Comandi su attività esistenti: si eseguono subito, senza passare
-      // dalla scheda di conferma (non c'è nulla da confermare)
-      if (data.action && data.action !== "crea") {
-        const bersaglio =
-          todoRows.find((t) => t.number === data.target_number) ||
-          todoRows.find((t) => t.title.toLowerCase() === (data.title || "").toLowerCase());
+      // dalla scheda di conferma (non c'è nulla da confermare).
+      // Un solo comando può contenerne più di uno.
+      if (Array.isArray(data.operations) && data.operations.length > 0) {
+        const trova = (op) =>
+          todoRows.find((t) => t.number === op.target_number) ||
+          todoRows.find((t) => t.title.toLowerCase() === (op.target_title || "").toLowerCase());
 
-        if (!bersaglio) {
+        const aggiunte = [];
+        const completate = [];
+        const riaperte = [];
+        const nonTrovate = [];
+
+        // in sequenza: l'ordine conta per la numerazione delle nuove voci
+        for (const op of data.operations) {
+          const bersaglio = trova(op);
+          if (!bersaglio) { nonTrovate.push(op.title || op.target_number || "?"); continue; }
+
+          if (op.action === "aggiungi_sotto") {
+            if (!op.title) continue;
+            await onAddSubtask?.(bersaglio.id, op.title);
+            aggiunte.push({ titolo: op.title, sotto: bersaglio.title });
+          } else {
+            const vuoleFatta = op.action === "completa";
+            if (!!bersaglio.done !== vuoleFatta) await onToggleTodo?.(bersaglio.id);
+            (vuoleFatta ? completate : riaperte).push(bersaglio.title);
+          }
+        }
+
+        await onRefresh?.();
+
+        if (aggiunte.length === 0 && completate.length === 0 && riaperte.length === 0) {
           setExtraction(data);
           setPhase("clarify");
           return;
         }
 
-        if (data.action === "aggiungi_sotto") {
-          await onAddSubtask?.(bersaglio.id, data.title);
-          setDoneMsg(`"${data.title}" aggiunta sotto "${bersaglio.title}".`);
-        } else {
-          const vuoleFatta = data.action === "completa";
-          if (!!bersaglio.done !== vuoleFatta) await onToggleTodo?.(bersaglio.id);
-          setDoneMsg(vuoleFatta
-            ? `"${bersaglio.title}" segnata come fatta.`
-            : `"${bersaglio.title}" rimessa tra le cose da fare.`);
+        const elenca = (v) => v.map((x) => `"${x}"`).join(", ");
+        const parti = [];
+        if (aggiunte.length) {
+          const genitori = [...new Set(aggiunte.map((a) => a.sotto))];
+          parti.push(
+            genitori.length === 1
+              ? `${elenca(aggiunte.map((a) => a.titolo))} ${aggiunte.length === 1 ? "aggiunta" : "aggiunte"} sotto "${genitori[0]}".`
+              : `${aggiunte.length} sotto-attività aggiunte.`
+          );
         }
+        if (completate.length) parti.push(`${elenca(completate)} ${completate.length === 1 ? "segnata" : "segnate"} come ${completate.length === 1 ? "fatta" : "fatte"}.`);
+        if (riaperte.length) parti.push(`${elenca(riaperte)} ${riaperte.length === 1 ? "rimessa" : "rimesse"} tra le cose da fare.`);
+        if (nonTrovate.length) parti.push(`Non ho trovato: ${elenca(nonTrovate)}.`);
+
+        setDoneMsg(parti.join(" "));
         setPhase("done");
         return;
       }

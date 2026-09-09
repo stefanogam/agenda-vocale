@@ -282,8 +282,9 @@ export default function App() {
             )}
             <VoiceCapture categories={categories} badges={badges} settings={settings} defaultReminderMinutes={settings.defaultReminderMinutes} context={agendaView}
               todoRows={todoRows}
-              onAddSubtask={async (parentId, title) => { await store.createTodo({ title, parent_id: parentId }); await reload(); }}
-              onToggleTodo={async (id) => { await store.toggleTodoDone(id); await reload(); }}
+              onAddSubtask={(parentId, title) => store.createTodo({ title, parent_id: parentId })}
+              onToggleTodo={(id) => store.toggleTodoDone(id)}
+              onRefresh={reload}
               onConfirm={handleVoiceConfirm}
             />
             <div style={{ width: 44 }} />
