@@ -6,6 +6,26 @@ Ogni modifica al progetto incrementa il numero di versione qui sotto e in
 - **MINOR** (0.X.0): nuove funzionalità che non rompono quelle esistenti
 - **MAJOR** (X.0.0): cambiamenti che rompono la compatibilità con l'uso precedente
 
+## [0.13.0] — 2026-09-09
+
+La dettatura tiene conto della sezione aperta, e comanda i to-do.
+
+- **Dettando dalla sezione Radar** viene creata un'attività radar, non un
+  appuntamento; **dalla sezione To-do** un'attività da fare. Nelle viste
+  calendario resta il comportamento di prima
+- Se l'interpretazione sbaglia, il tipo resta correggibile a mano: fra i
+  tipi selezionabili c'è ora anche **To-do**
+- **Comandi vocali sui to-do esistenti**: dalla sezione To-do si può dire
+  *"aggiungi il pane sotto la spesa"* oppure *"segna il latte come fatto"*
+  e l'azione viene eseguita subito, senza passare dalla scheda di conferma.
+  All'app viene inviato l'elenco delle attività con la loro numerazione,
+  così il riferimento è preciso
+- Se il comando non corrisponde a nessuna attività, viene chiesto di
+  ripetere invece di creare qualcosa di sbagliato
+- **Sotto-attività nella scheda del to-do**: toccando un'attività si
+  vedono ora le sue sotto-attività dirette, spuntabili sul posto, con un
+  campo per aggiungerne di nuove
+
 ## [0.12.3] — 2026-09-09
 
 Correzione: la dettatura rispondeva sempre "errore interno".
@@ -157,6 +177,26 @@ Eventi su più giorni disegnati come barre.
   compariva nell'elenco sotto: risultava solo nel giorno iniziale
 - Un evento iniziato prima del periodo visualizzato non veniva caricato
   affatto: una vacanza a cavallo di fine mese spariva dal mese successivo
+
+## [0.13.0] — 2026-09-09
+
+La dettatura tiene conto della sezione aperta, e comanda i to-do.
+
+- **Dettando dalla sezione Radar** viene creata un'attività radar, non un
+  appuntamento; **dalla sezione To-do** un'attività da fare. Nelle viste
+  calendario resta il comportamento di prima
+- Se l'interpretazione sbaglia, il tipo resta correggibile a mano: fra i
+  tipi selezionabili c'è ora anche **To-do**
+- **Comandi vocali sui to-do esistenti**: dalla sezione To-do si può dire
+  *"aggiungi il pane sotto la spesa"* oppure *"segna il latte come fatto"*
+  e l'azione viene eseguita subito, senza passare dalla scheda di conferma.
+  All'app viene inviato l'elenco delle attività con la loro numerazione,
+  così il riferimento è preciso
+- Se il comando non corrisponde a nessuna attività, viene chiesto di
+  ripetere invece di creare qualcosa di sbagliato
+- **Sotto-attività nella scheda del to-do**: toccando un'attività si
+  vedono ora le sue sotto-attività dirette, spuntabili sul posto, con un
+  campo per aggiungerne di nuove
 
 ## [0.12.3] — 2026-09-09
 

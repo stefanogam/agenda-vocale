@@ -1,6 +1,6 @@
 // client/components/VoiceCapture.jsx
 import { useState, useRef } from "react";
-import { Mic, Square, X } from "lucide-react";
+import { Mic, Square, X, Check } from "lucide-react";
 import { tokens } from "../lib/tokens.js";
 import PreviewSheet from "./PreviewSheet.jsx";
 
@@ -10,9 +10,10 @@ import PreviewSheet from "./PreviewSheet.jsx";
 const SpeechRecognitionAPI =
   typeof window !== "undefined" ? window.SpeechRecognition || window.webkitSpeechRecognition : null;
 
-export default function VoiceCapture({ categories, badges, settings, defaultReminderMinutes, onConfirm }) {
+export default function VoiceCapture({ categories, badges, settings, defaultReminderMinutes, context, todoRows = [], onAddSubtask, onToggleTodo, onConfirm }) {
   const [phase, setPhase] = useState("idle"); // idle | listening | processing | preview | clarify | unsupported | error
   const [errorMsg, setErrorMsg] = useState(null);
+  const [doneMsg, setDoneMsg] = useState(null);
   const [transcript, setTranscript] = useState("");
   const [extraction, setExtraction] = useState(null);
   const recognitionRef = useRef(null);
@@ -61,6 +62,7 @@ export default function VoiceCapture({ categories, badges, settings, defaultRemi
     setTranscript("");
     setExtraction(null);
     setErrorMsg(null);
+    setDoneMsg(null);
   }
 
   async function runExtraction(text) {
@@ -75,6 +77,12 @@ export default function VoiceCapture({ categories, badges, settings, defaultRemi
           now: new Date().toISOString(),
           categories: categories.map((c) => c.name),
           badges: badges.map((b) => b.name),
+          context, // la sezione aperta: radar, todo, o una vista calendario
+          // nella sezione To-do si manda anche l'elenco, così il comando
+          // può riferirsi a un'attività già presente
+          todos: context === "todo"
+            ? todoRows.map((t) => ({ number: t.number, title: t.title, done: !!t.done }))
+            : undefined,
         }),
       });
 
@@ -87,6 +95,34 @@ export default function VoiceCapture({ categories, badges, settings, defaultRemi
       }
 
       const data = await res.json();
+
+      // Comandi su attività esistenti: si eseguono subito, senza passare
+      // dalla scheda di conferma (non c'è nulla da confermare)
+      if (data.action && data.action !== "crea") {
+        const bersaglio =
+          todoRows.find((t) => t.number === data.target_number) ||
+          todoRows.find((t) => t.title.toLowerCase() === (data.title || "").toLowerCase());
+
+        if (!bersaglio) {
+          setExtraction(data);
+          setPhase("clarify");
+          return;
+        }
+
+        if (data.action === "aggiungi_sotto") {
+          await onAddSubtask?.(bersaglio.id, data.title);
+          setDoneMsg(`"${data.title}" aggiunta sotto "${bersaglio.title}".`);
+        } else {
+          const vuoleFatta = data.action === "completa";
+          if (!!bersaglio.done !== vuoleFatta) await onToggleTodo?.(bersaglio.id);
+          setDoneMsg(vuoleFatta
+            ? `"${bersaglio.title}" segnata come fatta.`
+            : `"${bersaglio.title}" rimessa tra le cose da fare.`);
+        }
+        setPhase("done");
+        return;
+      }
+
       setExtraction(data);
       setPhase(data.confidence === "low" ? "clarify" : "preview");
     } catch {
@@ -155,6 +191,23 @@ export default function VoiceCapture({ categories, badges, settings, defaultRemi
             <div className="flex gap-3">
               <button onClick={cancel} className="flex-1 rounded-xl py-3 flex items-center justify-center gap-2 text-sm font-medium" style={{ background: "transparent", border: `1px solid ${tokens.border}`, color: tokens.textSecondary }}><X size={16} /> Annulla</button>
               <button onClick={startListening} className="flex-1 rounded-xl py-3 flex items-center justify-center gap-2 text-sm font-semibold" style={{ background: tokens.amber, color: tokens.bg }}><Mic size={16} /> Riprova</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {phase === "done" && (
+        <div className="absolute inset-0 z-30 flex items-end" style={{ background: "rgba(8,11,18,0.55)" }} onClick={cancel}>
+          <div role="status" className="w-full rounded-t-[2rem] px-6 pt-5 pb-8" style={{ background: tokens.surface, borderTop: `1px solid ${tokens.border}` }} onClick={(e) => e.stopPropagation()}>
+            <div className="w-10 h-1 rounded-full mx-auto mb-5" style={{ background: tokens.border }} />
+            <div className="flex items-center gap-2 mb-3">
+              <div className="rounded-full p-1.5" style={{ background: "rgba(127,168,127,0.2)" }}><Check size={13} color={tokens.sage} /></div>
+              <p className="f-mono text-[11px] uppercase tracking-wider" style={{ color: tokens.sage }}>Fatto</p>
+            </div>
+            <p className="text-sm mb-6" style={{ color: tokens.textPrimary }}>{doneMsg}</p>
+            <div className="flex gap-3">
+              <button onClick={cancel} className="flex-1 rounded-xl py-3 text-sm font-medium" style={{ background: "transparent", border: `1px solid ${tokens.border}`, color: tokens.textSecondary }}>Chiudi</button>
+              <button onClick={startListening} className="flex-1 rounded-xl py-3 flex items-center justify-center gap-2 text-sm font-semibold" style={{ background: tokens.amber, color: tokens.bg }}><Mic size={16} /> Ancora</button>
             </div>
           </div>
         </div>

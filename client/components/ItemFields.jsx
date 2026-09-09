@@ -38,8 +38,8 @@ export default function ItemFields({ draft, setDraft, categories, badges, showTy
     <>
       {showTypeSelector && (
         <div className="flex rounded-full p-1 mb-4" style={{ background: tokens.surface2 }}>
-          {[{ k: "appuntamento", l: "Appuntamento" }, { k: "scadenza", l: "Scadenza" }, { k: "radar", l: "Radar" }].map(({ k, l }) => (
-            <button key={k} onClick={() => set({ type: k })} className="flex-1 rounded-full py-2 text-xs f-mono" style={{ background: d.type === k ? tokens.amber : "transparent", color: d.type === k ? tokens.bg : tokens.textSecondary }}>{l}</button>
+          {[{ k: "appuntamento", l: "Appunt." }, { k: "scadenza", l: "Scadenza" }, { k: "radar", l: "Radar" }, { k: "todo", l: "To-do" }].map(({ k, l }) => (
+            <button key={k} onClick={() => set({ type: k })} className="flex-1 rounded-full py-2 text-[11px] f-mono" style={{ background: d.type === k ? tokens.amber : "transparent", color: d.type === k ? tokens.bg : tokens.textSecondary }}>{l}</button>
           ))}
         </div>
       )}

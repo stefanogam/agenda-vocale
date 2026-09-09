@@ -479,6 +479,27 @@ export async function createTodo({ title, parent_id = null, date = null, notes =
   });
 }
 
+// Crea un elemento di qualunque tipo. I to-do hanno bisogno di qualche
+// campo in più (posizione tra i fratelli, categoria dedicata): centralizzando
+// qui, chi crea non deve sapere che tipo sta creando.
+export async function createAnyItem(data) {
+  if (data.type !== "todo") return createItem(data);
+
+  await ensureTodoCategory();
+  const parent_id = data.parent_id ?? null;
+  const siblings = (await listTodos()).filter((t) => (t.parent_id ?? null) === parent_id);
+  const order = siblings.reduce((max, t) => Math.max(max, t.order ?? 0), 0) + 1;
+
+  return createItem({
+    ...data,
+    category: data.category || TODO_CATEGORY,
+    parent_id,
+    order,
+    done: false,
+    deadline: !!data.date,
+  });
+}
+
 export async function toggleTodoDone(id) {
   const todo = await db.get("items", id);
   if (!todo) return;

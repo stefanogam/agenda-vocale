@@ -5,6 +5,7 @@ import { tokens, SWATCHES } from "./lib/tokens.js";
 import { ICONS } from "./lib/icons.js";
 import * as store from "./lib/store.js";
 import { dateKey, startOfDay, endOfDay } from "./lib/date-utils.js";
+import { buildTodoRows } from "./lib/todo-tree.js";
 import { APP_VERSION } from "./lib/version.js";
 import { registerServiceWorker } from "./pwa.js";
 import { startReminderLoop } from "./reminders.js";
@@ -100,7 +101,7 @@ export default function App() {
   }
 
   async function handleCreate(itemData) {
-    await store.createItem(itemData);
+    await store.createAnyItem(itemData);
     setCreating(false);
     await reload();
   }
@@ -116,7 +117,7 @@ export default function App() {
         await store.createBadge({ name: b, color: SWATCHES[badges.length % SWATCHES.length] });
       }
     }
-    await store.createItem(itemData);
+    await store.createAnyItem(itemData);
     await reload();
   }
 
@@ -160,6 +161,11 @@ export default function App() {
   }
 
   // Lista: raggruppa le occorrenze future per Oggi/Domani/Questa settimana/Più avanti
+  // L'albero dei to-do serve a tre punti diversi (lista, scheda di
+  // dettaglio, comandi vocali): si calcola qui una volta sola
+  const todos = items.filter((i) => i.type === "todo");
+  const todoRows = buildTodoRows(todos);
+
   const nonRadar = occurrences
     .filter((o) => o.type !== "radar")
     .sort((a, b) => a.occurrence_at.localeCompare(b.occurrence_at));
@@ -243,7 +249,7 @@ export default function App() {
 
           {agendaView === "todo" && (
             <TodoView
-              todos={items.filter((i) => i.type === "todo")}
+              rows={todoRows}
               today={today}
               onToggle={async (id) => { await store.toggleTodoDone(id); await reload(); }}
               onCreate={async (data) => { await store.createTodo(data); await reload(); }}
@@ -274,7 +280,12 @@ export default function App() {
                 <Plus size={18} color={tokens.textPrimary} />
               </button>
             )}
-            <VoiceCapture categories={categories} badges={badges} settings={settings} defaultReminderMinutes={settings.defaultReminderMinutes} onConfirm={handleVoiceConfirm} />
+            <VoiceCapture categories={categories} badges={badges} settings={settings} defaultReminderMinutes={settings.defaultReminderMinutes} context={agendaView}
+              todoRows={todoRows}
+              onAddSubtask={async (parentId, title) => { await store.createTodo({ title, parent_id: parentId }); await reload(); }}
+              onToggleTodo={async (id) => { await store.toggleTodoDone(id); await reload(); }}
+              onConfirm={handleVoiceConfirm}
+            />
             <div style={{ width: 44 }} />
           </div>
 
@@ -302,7 +313,10 @@ export default function App() {
 
           {todoDetail && (
             <TodoSheet
-              todo={todoDetail}
+              todo={todoRows.find((r) => r.id === todoDetail.id) || todoDetail}
+              subtasks={todoRows.filter((r) => r.parent_id === todoDetail.id)}
+              onToggleChild={async (id) => { await store.toggleTodoDone(id); await reload(); }}
+              onAddChild={async (parentId, title) => { await store.createTodo({ title, parent_id: parentId }); await reload(); }}
               onClose={() => setTodoDetail(null)}
               onSave={async (id, patch) => { await store.updateItem(id, patch); setTodoDetail(null); await reload(); }}
               onDelete={async (id) => { await store.deleteTodo(id); setTodoDetail(null); await reload(); }}

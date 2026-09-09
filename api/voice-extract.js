@@ -82,20 +82,52 @@ const RESPONSE_SCHEMA = {
     notes: { type: "STRING", description: "Dettagli aggiuntivi detti dall'utente. Stringa vuota se non ce ne sono." },
     confidence: { type: "STRING", enum: ["high", "medium", "low"], description: "'low' se qualcosa è ambiguo: l'app chiederà di ripetere invece di indovinare." },
     clarification_question: { type: "STRING", description: "Obbligatoria se confidence è 'low': domanda breve su cosa non è chiaro. Stringa vuota altrimenti." },
+    action: {
+      type: "STRING",
+      enum: ["crea", "aggiungi_sotto", "completa", "riapri"],
+      description:
+        "Cosa vuole fare l'utente. 'crea' (predefinito) per un elemento nuovo. " +
+        "'aggiungi_sotto' per una sotto-attività di una esistente. " +
+        "'completa' per segnare fatta un'attività esistente, 'riapri' per il contrario. " +
+        "Usa i valori diversi da 'crea' SOLO se nell'elenco delle attività esistenti c'è una corrispondenza chiara.",
+    },
+    target_number: {
+      type: "STRING",
+      description: "Numero dell'attività esistente su cui agire (es. '1.2'), copiato esattamente dall'elenco fornito. Stringa vuota se action è 'crea'.",
+    },
   },
   required: ["title", "type", "all_day", "confidence"],
-  propertyOrdering: ["title", "type", "category", "all_day", "start_at", "end_date", "rrule", "recurrence_ends_at", "badges", "notes", "confidence", "clarification_question"],
+  propertyOrdering: ["action", "target_number", "title", "type", "category", "all_day", "start_at", "end_date", "rrule", "recurrence_ends_at", "badges", "notes", "confidence", "clarification_question"],
 };
 
 const GIORNI = ["domenica", "lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato"];
 
-function buildPrompt({ transcript, now, timezone, categories, badges }) {
+function buildPrompt({ transcript, now, timezone, categories, badges, context, todos }) {
   const d = new Date(now);
   const pad = (n) => String(n).padStart(2, "0");
   const adesso = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 
+  // La sezione aperta dice cosa l'utente si aspetta di creare: dettando
+  // dalla sezione Radar vuole quasi certamente un radar, non un appuntamento
+  const perContesto = {
+    radar: `L'utente sta dettando dalla sezione RADAR. Salvo indicazioni contrarie esplicite nella frase, type deve essere "radar": un'attività da tenere d'occhio senza data fissa, con rrule come cadenza di controllo (se non detta, usa FREQ=WEEKLY;INTERVAL=2) e start_at vuoto.`,
+    todo: `L'utente sta dettando dalla sezione TO-DO. Salvo indicazioni contrarie esplicite nella frase, type deve essere "todo": un'attività da fare. start_at solo se viene detta una scadenza, altrimenti vuoto.`,
+  }[context] || `L'utente sta dettando dalla sezione calendario: di norma si tratta di appuntamenti o scadenze.`;
+
+  const elenco = (todos || []).length
+    ? `\nAttività già presenti (numero e titolo):\n${todos.map((t) => `${t.number} ${t.title}${t.done ? " [già fatta]" : ""}`).join("\n")}\n
+Se la frase si riferisce a una di queste, imposta "action" e copia il suo numero in "target_number":
+- "aggiungi il pane sotto la spesa" → action "aggiungi_sotto", target_number il numero della spesa, title "Pane"
+- "segna il latte come fatto" / "ho fatto il bagno" → action "completa", target_number quello corrispondente
+- "il pane non l'ho ancora preso" → action "riapri"
+Se non c'è una corrispondenza chiara, usa action "crea".`
+    : "";
+
   return `Sei il motore di interpretazione vocale di un'app di agenda personale italiana.
 Converti la frase dell'utente in un elemento strutturato.
+
+${perContesto}
+${elenco}
 
 Adesso è ${GIORNI[d.getDay()]} ${adesso} (fuso orario ${timezone || "Europe/Rome"}).
 Categorie esistenti dell'utente: ${(categories || []).join(", ") || "nessuna"}.
@@ -128,6 +160,8 @@ function normalize(raw, transcript) {
     recurrence_ends_at: vuoto(raw.recurrence_ends_at),
     badges: Array.isArray(raw.badges) ? raw.badges.filter(Boolean) : [],
     notes: vuoto(raw.notes),
+    action: raw.action || "crea",
+    target_number: vuoto(raw.target_number),
     confidence: raw.confidence || "medium",
     clarification_question: vuoto(raw.clarification_question),
     transcript,
@@ -137,7 +171,7 @@ function normalize(raw, transcript) {
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
-  const { transcript, timezone, now, categories, badges } = req.body ?? {};
+  const { transcript, timezone, now, categories, badges, context, todos } = req.body ?? {};
   if (!transcript || typeof transcript !== "string") {
     return res.status(400).json({ error: "Campo 'transcript' mancante o non valido" });
   }
@@ -152,7 +186,7 @@ export default async function handler(req, res) {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-goog-api-key": key },
       body: JSON.stringify({
-        contents: [{ parts: [{ text: buildPrompt({ transcript, now, timezone, categories, badges }) }] }],
+        contents: [{ parts: [{ text: buildPrompt({ transcript, now, timezone, categories, badges, context, todos }) }] }],
         generationConfig: {
           responseMimeType: "application/json",
           responseSchema: RESPONSE_SCHEMA,

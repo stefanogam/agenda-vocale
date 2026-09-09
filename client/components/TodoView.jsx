@@ -2,11 +2,9 @@
 import { useState } from "react";
 import { Check, Plus, X, CornerDownRight, CalendarDays, ChevronRight, ChevronDown, ChevronUp, Eye, EyeOff } from "lucide-react";
 import { tokens } from "../lib/tokens.js";
-import { buildTodoRows } from "../lib/todo-tree.js";
 import { parseKey, shortDate, diffDays } from "../lib/date-utils.js";
 
-export default function TodoView({ todos, today, onToggle, onCreate, onOpen }) {
-  const rows = buildTodoRows(todos);
+export default function TodoView({ rows, today, onToggle, onCreate, onOpen }) {
 
   // Solo le attività principali aperte compaiono coi loro rami:
   // all'apertura è tutto chiuso, così si vede subito l'elenco 1, 2, 3…
