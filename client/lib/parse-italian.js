@@ -1,5 +1,10 @@
 // client/lib/parse-italian.js
 //
+// NON PIÙ IN USO dalla versione 0.12.0: l'interpretazione è passata a
+// Gemini Flash (vedi api/voice-extract.js). Il file resta qui, con i suoi
+// test, perché è l'unico modo per far funzionare la dettatura offline:
+// se un giorno servisse, basta ricollegarlo in VoiceCapture.
+//
 // Trasforma una frase in italiano ("ricordami dal dentista martedì alle tre")
 // in un appuntamento strutturato, senza chiamare nessun servizio esterno:
 // tutto avviene sul dispositivo, gratis, offline e senza che il testo esca

@@ -6,6 +6,29 @@ Ogni modifica al progetto incrementa il numero di versione qui sotto e in
 - **MINOR** (0.X.0): nuove funzionalità che non rompono quelle esistenti
 - **MAJOR** (X.0.0): cambiamenti che rompono la compatibilità con l'uso precedente
 
+## [0.12.0] — 2026-08-25
+
+L'interpretazione della voce passa a Gemini Flash.
+
+- L'interprete italiano scritto su misura è sostituito da **Gemini Flash**,
+  che capisce anche le frasi fuori dagli schemi previsti
+- Nuova funzione serverless `api/voice-extract.js`: la chiave API non può
+  stare nel browser, quindi passa da lì
+- Richiede la variabile d'ambiente `GEMINI_API_KEY` su Vercel
+  (facoltativa: `GEMINI_MODEL`, default `gemini-2.5-flash`)
+- Gemini deduce ora anche la **durata su più giorni** e la **fine della
+  ricorrenza**, che l'interprete locale non ricavava
+- Se manca la rete o la quota è esaurita, compare un messaggio chiaro con
+  la possibilità di riprovare, invece di un fallimento silenzioso
+
+**Da sapere**
+- **La dettatura ora richiede la connessione**: prima funzionava offline.
+  Il resto dell'app continua a funzionare senza rete
+- Il testo dettato viene inviato a Google. Sul piano gratuito Google può
+  usarlo per migliorare i propri modelli; attivando la fatturazione no
+- `client/lib/parse-italian.js` resta nel progetto ma non è più collegato:
+  è l'unico modo per riavere la dettatura offline, se un giorno servisse
+
 ## [0.11.0] — 2026-08-24
 
 Notifiche funzionanti e modifica di categorie e badge.
@@ -89,6 +112,29 @@ Eventi su più giorni disegnati come barre.
   compariva nell'elenco sotto: risultava solo nel giorno iniziale
 - Un evento iniziato prima del periodo visualizzato non veniva caricato
   affatto: una vacanza a cavallo di fine mese spariva dal mese successivo
+
+## [0.12.0] — 2026-08-25
+
+L'interpretazione della voce passa a Gemini Flash.
+
+- L'interprete italiano scritto su misura è sostituito da **Gemini Flash**,
+  che capisce anche le frasi fuori dagli schemi previsti
+- Nuova funzione serverless `api/voice-extract.js`: la chiave API non può
+  stare nel browser, quindi passa da lì
+- Richiede la variabile d'ambiente `GEMINI_API_KEY` su Vercel
+  (facoltativa: `GEMINI_MODEL`, default `gemini-2.5-flash`)
+- Gemini deduce ora anche la **durata su più giorni** e la **fine della
+  ricorrenza**, che l'interprete locale non ricavava
+- Se manca la rete o la quota è esaurita, compare un messaggio chiaro con
+  la possibilità di riprovare, invece di un fallimento silenzioso
+
+**Da sapere**
+- **La dettatura ora richiede la connessione**: prima funzionava offline.
+  Il resto dell'app continua a funzionare senza rete
+- Il testo dettato viene inviato a Google. Sul piano gratuito Google può
+  usarlo per migliorare i propri modelli; attivando la fatturazione no
+- `client/lib/parse-italian.js` resta nel progetto ma non è più collegato:
+  è l'unico modo per riavere la dettatura offline, se un giorno servisse
 
 ## [0.11.0] — 2026-08-24
 

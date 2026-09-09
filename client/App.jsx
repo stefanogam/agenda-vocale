@@ -274,7 +274,7 @@ export default function App() {
                 <Plus size={18} color={tokens.textPrimary} />
               </button>
             )}
-            <VoiceCapture categories={categories} badges={badges} defaultReminderMinutes={settings.defaultReminderMinutes} onConfirm={handleVoiceConfirm} />
+            <VoiceCapture categories={categories} badges={badges} settings={settings} defaultReminderMinutes={settings.defaultReminderMinutes} onConfirm={handleVoiceConfirm} />
             <div style={{ width: 44 }} />
           </div>
 

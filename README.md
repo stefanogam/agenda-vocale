@@ -14,12 +14,16 @@ complessità possibile; un percorso di upgrade verso un vero backend
 è già progettato e pronto in [`future-upgrade/`](./future-upgrade),
 non collegato a questa versione.
 
-Anche la voce è interamente locale: il browser trascrive, e un
-interprete scritto su misura per l'italiano ricava data, ora e ricorrenza
-dalla frase. L'app non contatta nessun server, mai.
+L'unica eccezione è l'interpretazione della voce: capire un comando
+dettato richiede un modello AI (Gemini Flash), e la chiave per usarlo non
+può stare nel codice del browser. Per questo un'unica funzione serverless
+([`api/voice-extract.js`](./api/voice-extract.js)) fa da tramite sicuro —
+il resto dell'app non tocca mai un server.
 
 ```
 ├── index.html              punto di ingresso
+├── api/
+│   └── voice-extract.js    unica funzione serverless (Gemini Flash)
 ├── client/                 tutto il codice React
 │   ├── App.jsx              orchestratore principale
 │   ├── main.jsx              entry point
@@ -45,28 +49,55 @@ niente da configurare.
 
 ## La voce
 
-Non serve nessuna chiave API, nessun account e nessun costo: funziona
-tutto sul dispositivo.
+Due passaggi:
 
 - **Trascrizione**: la Web Speech API del browser converte la voce in
   testo. Gratis, ma disponibile solo su Chrome/Edge/Safari recenti (non
   su Firefox). Se manca, il pulsante lo segnala e resta la creazione manuale.
-- **Interpretazione**: [`client/lib/parse-italian.js`](./client/lib/parse-italian.js)
-  riconosce le espressioni italiane comuni — *"domani alle 15"*,
-  *"martedì alle tre"*, *"ogni lunedì"*, *"tra due settimane"*,
-  *"entro il 30 agosto"*, *"ogni tanto"* — e ne ricava data, ora,
-  ricorrenza, tipo, categoria e badge.
+- **Interpretazione**: [`api/voice-extract.js`](./api/voice-extract.js)
+  manda il testo a **Gemini Flash**, che ne ricava data, ora, ricorrenza,
+  tipo, categoria e badge. La chiave API non può stare nel browser, quindi
+  passa da questa funzione serverless.
 
-Il testo non esce mai dal telefono. Quando l'interprete non capisce, lo
-dice invece di indovinare: la scheda di conferma è comunque sempre
-modificabile a mano prima di salvare.
+Serve una connessione: **la dettatura non funziona offline**. Il resto
+dell'app sì.
+
+### Configurare la chiave
+
+1. Vai su [aistudio.google.com](https://aistudio.google.com) → *Get API key*
+   → crea una chiave (non serve carta di credito per il piano gratuito)
+2. In locale: installa la [Vercel CLI](https://vercel.com/docs/cli)
+   (`npm i -g vercel`) e lancia `vercel dev` invece di `npm run dev`, con
+   un file `.env.local`:
+   ```
+   GEMINI_API_KEY=...
+   ```
+3. In produzione (Vercel): Project Settings → Environment Variables →
+   aggiungi `GEMINI_API_KEY`, poi fai "Redeploy" perché venga letta
+
+Facoltativo: `GEMINI_MODEL` per cambiare modello (default
+`gemini-2.5-flash`). I limiti giornalieri del piano gratuito variano
+parecchio da modello a modello — le varianti *Flash-Lite* ne concedono
+molti di più.
+
+### Due avvertenze sul piano gratuito
+
+- Sul piano gratuito Google può usare i contenuti inviati per migliorare i
+  propri modelli. Attivando la fatturazione questo non avviene, e per un
+  uso personale il costo reale è di pochi centesimi al mese.
+- Le condizioni aggiuntive dell'API prevedono l'uso dei soli servizi a
+  pagamento quando si rendono disponibili client API a utenti in
+  EEA/Svizzera/Regno Unito. La documentazione dice però che il piano
+  gratuito è disponibile in quelle aree: il punto sembra riguardare la
+  distribuzione a terzi più che l'uso personale, ma non è del tutto chiaro.
+  Attivare la fatturazione risolve anche questo dubbio.
 
 ## Deploy
 
 Collega il repository a [Vercel](https://vercel.com) (New Project →
-Import Git Repository). Vercel rileva automaticamente Vite: nessuna
-configurazione, nessuna variabile d'ambiente da impostare. Ogni push su
-`main` fa deploy da solo.
+Import Git Repository). Vercel rileva automaticamente Vite e la cartella
+`api/`. L'unica variabile d'ambiente da impostare è `GEMINI_API_KEY`.
+Ogni push su `main` fa deploy da solo.
 
 ## Limiti noti di questa versione
 
