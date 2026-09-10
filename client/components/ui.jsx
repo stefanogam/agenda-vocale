@@ -20,7 +20,7 @@ export function AddButton({ label, onClick }) {
   );
 }
 
-export function FormCard({ value, onChange, onSubmit, onCancel, onDelete, showIcons, placeholder, cta }) {
+export function FormCard({ value, onChange, onSubmit, onCancel, onDelete, showIcons, showBarToggle, placeholder, cta }) {
   return (
     <div className="rounded-2xl p-4" style={{ background: tokens.surface, border: `1px solid ${tokens.border}` }}>
       <input autoFocus value={value.name} onChange={(e) => onChange({ ...value, name: e.target.value })} placeholder={placeholder}
@@ -49,6 +49,27 @@ export function FormCard({ value, onChange, onSubmit, onCancel, onDelete, showIc
               );
             })}
           </div>
+        </>
+      )}
+
+      {showBarToggle && (
+        <>
+          <div className="flex items-center justify-between mb-1">
+            <p className="f-mono text-[10px] uppercase tracking-wider" style={{ color: tokens.textSecondary }}>Barra nel calendario</p>
+            <button
+              onClick={() => onChange({ ...value, bar_display: !value.bar_display })}
+              aria-label="Barra nel calendario"
+              className="w-10 h-6 rounded-full relative shrink-0"
+              style={{ background: value.bar_display ? value.color : tokens.surface2 }}
+            >
+              <span className="absolute top-0.5 w-5 h-5 rounded-full transition-all" style={{ background: tokens.bg, left: value.bar_display ? 18 : 2 }} />
+            </button>
+          </div>
+          <p className="text-xs mb-4" style={{ color: tokens.textSecondary }}>
+            {value.bar_display
+              ? "Anche gli appuntamenti di un solo giorno saranno mostrati con una barra colorata, come quelli di più giorni."
+              : "Gli appuntamenti di un solo giorno sono mostrati con un puntino."}
+          </p>
         </>
       )}
 

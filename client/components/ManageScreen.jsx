@@ -35,7 +35,7 @@ export default function ManageScreen({ onBack, categories, badges, settings, onA
 
   async function saveCategory() {
     if (!catForm?.name?.trim()) return;
-    if (catForm.id) await store.updateCategory(catForm.id, { name: catForm.name.trim(), color: catForm.color, icon: catForm.icon });
+    if (catForm.id) await store.updateCategory(catForm.id, { name: catForm.name.trim(), color: catForm.color, icon: catForm.icon, bar_display: !!catForm.bar_display });
     else await onAddCategory({ ...catForm, name: catForm.name.trim() });
     setCatForm(null);
     onDataRestored?.();
@@ -130,13 +130,15 @@ export default function ManageScreen({ onBack, categories, badges, settings, onA
             {categories.map((c) => { const Icon = ICONS[c.icon] || Star; return (
               <button
                 key={c.id}
-                onClick={() => setCatForm({ id: c.id, name: c.name, color: c.color, icon: c.icon, originalName: c.name })}
+                onClick={() => setCatForm({ id: c.id, name: c.name, color: c.color, icon: c.icon, bar_display: !!c.bar_display, originalName: c.name })}
                 className="rounded-2xl px-4 py-3 flex items-center gap-3 w-full text-left"
                 style={{ background: tokens.surface, border: `1px solid ${catForm?.id === c.id ? tokens.amber : tokens.border}` }}
               >
                 <div className="rounded-full p-2" style={{ background: `${c.color}22` }}><Icon size={15} color={c.color} /></div>
                 <span className="text-sm" style={{ color: tokens.textPrimary }}>{c.name}</span>
-                <span className="ml-auto w-2.5 h-2.5 rounded-full" style={{ background: c.color }} />
+                {c.bar_display
+                  ? <span className="ml-auto rounded-full" style={{ width: 18, height: 3, background: c.color }} />
+                  : <span className="ml-auto w-2.5 h-2.5 rounded-full" style={{ background: c.color }} />}
               </button>
             ); })}
           </div>
@@ -145,6 +147,7 @@ export default function ManageScreen({ onBack, categories, badges, settings, onA
               value={catForm}
               onChange={setCatForm}
               showIcons
+              showBarToggle
               placeholder="Nome categoria (es. Viaggi)"
               cta={catForm.id ? "Salva" : "Crea categoria"}
               onCancel={() => setCatForm(null)}
@@ -152,7 +155,7 @@ export default function ManageScreen({ onBack, categories, badges, settings, onA
               onDelete={catForm.id ? removeCategory : undefined}
             />
           ) : (
-            <AddButton label="Nuova categoria" onClick={() => setCatForm({ name: "", color: SWATCHES[0], icon: ICON_KEYS[0] })} />
+            <AddButton label="Nuova categoria" onClick={() => setCatForm({ name: "", color: SWATCHES[0], icon: ICON_KEYS[0], bar_display: false })} />
           )}
         </>
       )}

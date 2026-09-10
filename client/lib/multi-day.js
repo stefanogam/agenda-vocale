@@ -24,14 +24,18 @@ export function occursOn(occ, key) {
 // Segmenti da disegnare sotto una riga di 7 giorni.
 // Un evento che attraversa più settimane produce un segmento per riga,
 // con gli angoli squadrati dal lato in cui prosegue.
-export function segmentsForWeek(occurrences, weekDates) {
+//
+// `comeBarra` decide cosa disegnare come barra: di norma solo gli eventi
+// di più giorni, ma alcune categorie possono chiedere la barra anche per
+// gli eventi di un giorno solo (impostazione per categoria).
+export function segmentsForWeek(occurrences, weekDates, comeBarra = isMultiDay) {
   const keys = weekDates.map(dateKey);
   const weekStart = keys[0];
   const weekEnd = keys[6];
 
   const candidates = occurrences
-    .filter(isMultiDay)
-    .filter((o) => o.date <= weekEnd && o.end_date >= weekStart)
+    .filter(comeBarra)
+    .filter((o) => o.date <= weekEnd && (o.end_date || o.date) >= weekStart)
     // i più lunghi in alto: le barre corte sotto restano leggibili
     .sort((a, b) => a.date.localeCompare(b.date) || b.end_date.localeCompare(a.end_date));
 
@@ -39,8 +43,10 @@ export function segmentsForWeek(occurrences, weekDates) {
   const segments = [];
 
   for (const occ of candidates) {
+    // un evento di un giorno solo comincia e finisce nello stesso giorno
+    const fine = occ.end_date || occ.date;
     const startKey = occ.date > weekStart ? occ.date : weekStart;
-    const endKey = occ.end_date < weekEnd ? occ.end_date : weekEnd;
+    const endKey = fine < weekEnd ? fine : weekEnd;
     const startCol = keys.indexOf(startKey);
     const endCol = keys.indexOf(endKey);
     if (startCol < 0 || endCol < 0) continue;
@@ -55,7 +61,7 @@ export function segmentsForWeek(occurrences, weekDates) {
       startCol,
       span: endCol - startCol + 1,
       continuesLeft: occ.date < weekStart,
-      continuesRight: occ.end_date > weekEnd,
+      continuesRight: fine > weekEnd,
     });
   }
 

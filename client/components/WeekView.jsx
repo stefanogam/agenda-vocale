@@ -10,7 +10,7 @@ import { segmentsForWeek, occursOn, isMultiDay } from "../lib/multi-day.js";
 
 const WEEKDAY_SHORT = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"];
 
-export default function WeekView({ catColor, catIcon, badgeColor, settings, today, selectedKey, setSelectedKey, anchor, setAnchor, dataVersion, onOpen }) {
+export default function WeekView({ catColor, catIcon, catBarra, badgeColor, settings, today, selectedKey, setSelectedKey, anchor, setAnchor, dataVersion, onOpen }) {
   const [occurrences, setOccurrences] = useState([]);
   const days = weekDatesFor(anchor);
 
@@ -24,11 +24,15 @@ export default function WeekView({ catColor, catIcon, badgeColor, settings, toda
   }, [anchor, dataVersion]);
 
   const visible = occurrences.filter((o) => o.type !== "radar");
+
+  // Una barra si disegna per gli eventi di più giorni e per quelli delle
+  // categorie che l'hanno richiesta nelle impostazioni
+  const comeBarra = (o) => isMultiDay(o) || !!catBarra?.(o.category);
   const dayOccurrences = visible.filter((o) => occursOn(o, selectedKey));
   // il puntino segnala solo gli eventi di un giorno: quelli lunghi
   // hanno già la loro barra sotto la striscia
-  const countFor = (key) => visible.filter((o) => !isMultiDay(o) && o.date === key).length;
-  const { segments, laneCount } = segmentsForWeek(visible, days);
+  const countFor = (key) => visible.filter((o) => !comeBarra(o) && o.date === key).length;
+  const { segments, laneCount } = segmentsForWeek(visible, days, comeBarra);
 
   // Scegliendo una data (dal calendario nativo o da "Oggi") salta anche
   // alla settimana che la contiene, non solo alla selezione del giorno.

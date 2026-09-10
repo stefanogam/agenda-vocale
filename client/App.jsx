@@ -90,6 +90,8 @@ export default function App() {
 
   function catColor(name) { return categories.find((c) => c.name === name)?.color || tokens.textSecondary; }
   function catIcon(name) { return ICONS[categories.find((c) => c.name === name)?.icon] || Star; }
+  // Alcune categorie chiedono la barra anche per gli eventi di un giorno solo
+  function catBarra(name) { return !!categories.find((c) => c.name === name)?.bar_display; }
   function badgeColor(name) { return badges.find((b) => b.name === name)?.color || tokens.textSecondary; }
 
   // Nelle viste calendario il "+" crea l'evento nel giorno che stai
@@ -244,7 +246,7 @@ export default function App() {
 
           {agendaView === "settimana" && (
             <WeekView
-              catColor={catColor} catIcon={catIcon} badgeColor={badgeColor} settings={settings} today={today}
+              catColor={catColor} catIcon={catIcon} catBarra={catBarra} badgeColor={badgeColor} settings={settings} today={today}
               selectedKey={selectedKey} setSelectedKey={setSelectedKey}
               anchor={weekAnchor} setAnchor={setWeekAnchor} dataVersion={dataVersion}
               onOpen={(o) => setDetail({ occ: o, isRadar: false })}
@@ -253,7 +255,7 @@ export default function App() {
 
           {agendaView === "mese" && (
             <MonthView
-              catColor={catColor} catIcon={catIcon} badgeColor={badgeColor} settings={settings} today={today}
+              catColor={catColor} catIcon={catIcon} catBarra={catBarra} badgeColor={badgeColor} settings={settings} today={today}
               selectedKey={selectedKey} setSelectedKey={setSelectedKey}
               anchor={monthAnchor} setAnchor={setMonthAnchor} dataVersion={dataVersion}
               onOpen={(o) => setDetail({ occ: o, isRadar: false })}

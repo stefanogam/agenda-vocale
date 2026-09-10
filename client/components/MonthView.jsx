@@ -10,7 +10,7 @@ import { segmentsForWeek, occursOn, isMultiDay } from "../lib/multi-day.js";
 
 const WEEKDAY_SHORT = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"];
 
-export default function MonthView({ catColor, catIcon, badgeColor, settings, today, selectedKey, setSelectedKey, anchor, setAnchor, dataVersion, onOpen }) {
+export default function MonthView({ catColor, catIcon, catBarra, badgeColor, settings, today, selectedKey, setSelectedKey, anchor, setAnchor, dataVersion, onOpen }) {
   const [occurrences, setOccurrences] = useState([]);
   const weeks = buildMonthGrid(anchor.getFullYear(), anchor.getMonth());
 
@@ -24,10 +24,14 @@ export default function MonthView({ catColor, catIcon, badgeColor, settings, tod
   }, [anchor, dataVersion]);
 
   const visible = occurrences.filter((o) => o.type !== "radar");
+
+  // Una barra si disegna per gli eventi di più giorni e per quelli delle
+  // categorie che l'hanno richiesta nelle impostazioni
+  const comeBarra = (o) => isMultiDay(o) || !!catBarra?.(o.category);
   const dayOccurrences = visible.filter((o) => occursOn(o, selectedKey));
   // i puntini restano per gli eventi di un solo giorno: quelli lunghi
   // diventano barre, altrimenti si conterebbero due volte
-  const dotsFor = (key) => visible.filter((o) => !isMultiDay(o) && o.date === key);
+  const dotsFor = (key) => visible.filter((o) => !comeBarra(o) && o.date === key);
 
   // Scegliendo una data (dal calendario nativo o da "Oggi") salta anche
   // al mese che la contiene, non solo alla selezione del giorno.
@@ -59,7 +63,7 @@ export default function MonthView({ catColor, catIcon, badgeColor, settings, tod
       </div>
       <div className="flex flex-col gap-1 mb-4">
         {weeks.map((week, wi) => {
-          const { segments, laneCount } = segmentsForWeek(visible, week);
+          const { segments, laneCount } = segmentsForWeek(visible, week, comeBarra);
           return (
             <div key={wi} className="flex flex-col gap-0.5">
               <div className="grid grid-cols-7 gap-1">

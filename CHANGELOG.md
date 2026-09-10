@@ -6,6 +6,22 @@ Ogni modifica al progetto incrementa il numero di versione qui sotto e in
 - **MINOR** (0.X.0): nuove funzionalità che non rompono quelle esistenti
 - **MAJOR** (X.0.0): cambiamenti che rompono la compatibilità con l'uso precedente
 
+## [0.16.0] — 2026-09-10
+
+Barra nel calendario anche per gli eventi di un giorno.
+
+- Nelle impostazioni, ogni **categoria** ha ora l'interruttore **"Barra nel
+  calendario"**: attivandolo, gli appuntamenti di quella categoria vengono
+  mostrati con una barra colorata anche quando durano un giorno solo,
+  invece che con un puntino
+- Vale sia per la vista **Mese** sia per quella **Settimana**
+- Nell'elenco delle categorie l'indicatore riflette la scelta: un puntino
+  o un trattino, così si vede a colpo d'occhio come verrà disegnata
+- Le categorie senza l'interruttore attivo continuano a usare il puntino,
+  e gli eventi di più giorni restano barre come prima
+- Quando barre e puntini coesistono nello stesso giorno, le barre
+  occupano corsie separate senza sovrapporsi
+
 ## [0.15.0] — 2026-09-10
 
 Eliminazione delle voci to-do.
@@ -212,6 +228,22 @@ Eventi su più giorni disegnati come barre.
   compariva nell'elenco sotto: risultava solo nel giorno iniziale
 - Un evento iniziato prima del periodo visualizzato non veniva caricato
   affatto: una vacanza a cavallo di fine mese spariva dal mese successivo
+
+## [0.16.0] — 2026-09-10
+
+Barra nel calendario anche per gli eventi di un giorno.
+
+- Nelle impostazioni, ogni **categoria** ha ora l'interruttore **"Barra nel
+  calendario"**: attivandolo, gli appuntamenti di quella categoria vengono
+  mostrati con una barra colorata anche quando durano un giorno solo,
+  invece che con un puntino
+- Vale sia per la vista **Mese** sia per quella **Settimana**
+- Nell'elenco delle categorie l'indicatore riflette la scelta: un puntino
+  o un trattino, così si vede a colpo d'occhio come verrà disegnata
+- Le categorie senza l'interruttore attivo continuano a usare il puntino,
+  e gli eventi di più giorni restano barre come prima
+- Quando barre e puntini coesistono nello stesso giorno, le barre
+  occupano corsie separate senza sovrapporsi
 
 ## [0.15.0] — 2026-09-10
 
