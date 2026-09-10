@@ -6,7 +6,7 @@ import { useEscapeClose } from "../lib/use-escape-close.js";
 
 const inputStyle = { background: tokens.surface2, color: tokens.textPrimary, border: `1px solid ${tokens.border}` };
 
-export default function TodoSheet({ todo, subtasks = [], onClose, onSave, onDelete, onToggleChild, onAddChild }) {
+export default function TodoSheet({ todo, subtasks = [], onClose, onSave, onDelete, onToggleChild, onAddChild, onDeleteChild }) {
   const [title, setTitle] = useState(todo.title || "");
   const [date, setDate] = useState(todo.date || "");
   const [notes, setNotes] = useState(todo.notes || "");
@@ -94,6 +94,9 @@ export default function TodoSheet({ todo, subtasks = [], onClose, onSave, onDele
               <span className="text-sm flex-1 min-w-0" style={{ color: c.done ? tokens.textSecondary : tokens.textPrimary, textDecoration: c.done ? "line-through" : "none" }}>
                 {c.title}
               </span>
+              <button onClick={() => onDeleteChild?.(c)} aria-label={`Elimina ${c.title}`} className="rounded-full p-1.5 shrink-0" style={{ background: "transparent" }}>
+                <Trash2 size={12} color={tokens.coral} />
+              </button>
             </div>
           ))}
           {subtasks.length === 0 && (

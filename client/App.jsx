@@ -147,6 +147,19 @@ export default function App() {
     await reload();
   }
 
+  // Un'attività può contenere un ramo intero: la conferma dice quante
+  // sotto-attività verranno rimosse insieme
+  async function eliminaTodo(row) {
+    const n = row.childTotal ?? 0;
+    const msg = n > 0
+      ? `Eliminare "${row.title}" e le ${n} sotto-attività che contiene?`
+      : `Eliminare "${row.title}"?`;
+    if (!window.confirm(msg)) return;
+    await store.deleteTodo(row.id);
+    if (todoDetail?.id === row.id) setTodoDetail(null);
+    await reload();
+  }
+
   async function handleMarkChecked(id) {
     await store.updateItem(id, { last_checked_at: new Date().toISOString() });
     await reload();
@@ -254,6 +267,7 @@ export default function App() {
               onToggle={async (id) => { await store.toggleTodoDone(id); await reload(); }}
               onCreate={async (data) => { await store.createTodo(data); await reload(); }}
               onOpen={(t) => setTodoDetail(t)}
+              onDelete={eliminaTodo}
             />
           )}
 
@@ -284,6 +298,7 @@ export default function App() {
               todoRows={todoRows}
               onAddSubtask={(parentId, title) => store.createTodo({ title, parent_id: parentId })}
               onToggleTodo={(id) => store.toggleTodoDone(id)}
+              onDeleteTodo={(id) => store.deleteTodo(id)}
               onRefresh={reload}
               onConfirm={handleVoiceConfirm}
             />
@@ -318,6 +333,7 @@ export default function App() {
               subtasks={todoRows.filter((r) => r.parent_id === todoDetail.id)}
               onToggleChild={async (id) => { await store.toggleTodoDone(id); await reload(); }}
               onAddChild={async (parentId, title) => { await store.createTodo({ title, parent_id: parentId }); await reload(); }}
+              onDeleteChild={eliminaTodo}
               onClose={() => setTodoDetail(null)}
               onSave={async (id, patch) => { await store.updateItem(id, patch); setTodoDetail(null); await reload(); }}
               onDelete={async (id) => { await store.deleteTodo(id); setTodoDetail(null); await reload(); }}

@@ -1,10 +1,10 @@
 // client/components/TodoView.jsx
 import { useState } from "react";
-import { Check, Plus, X, CornerDownRight, CalendarDays, ChevronRight, ChevronDown, ChevronUp, Eye, EyeOff } from "lucide-react";
+import { Check, Plus, X, CornerDownRight, CalendarDays, ChevronRight, ChevronDown, ChevronUp, Eye, EyeOff, Trash2 } from "lucide-react";
 import { tokens } from "../lib/tokens.js";
 import { parseKey, shortDate, diffDays } from "../lib/date-utils.js";
 
-export default function TodoView({ rows, today, onToggle, onCreate, onOpen }) {
+export default function TodoView({ rows, today, onToggle, onCreate, onOpen, onDelete }) {
 
   // Solo le attività principali aperte compaiono coi loro rami:
   // all'apertura è tutto chiuso, così si vede subito l'elenco 1, 2, 3…
@@ -188,6 +188,9 @@ export default function TodoView({ rows, today, onToggle, onCreate, onOpen }) {
 
                 <button onClick={() => openAdd(t.id, t.rootId)} aria-label="Aggiungi sotto-attività" className="rounded-full p-1.5 shrink-0" style={{ background: tokens.surface2 }}>
                   <CornerDownRight size={12} color={tokens.textSecondary} />
+                </button>
+                <button onClick={() => onDelete?.(t)} aria-label={`Elimina ${t.title}`} className="rounded-full p-1.5 shrink-0" style={{ background: tokens.surface2 }}>
+                  <Trash2 size={12} color={tokens.coral} />
                 </button>
               </div>
 

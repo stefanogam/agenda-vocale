@@ -91,7 +91,7 @@ const RESPONSE_SCHEMA = {
       items: {
         type: "OBJECT",
         properties: {
-          action: { type: "STRING", enum: ["aggiungi_sotto", "completa", "riapri"] },
+          action: { type: "STRING", enum: ["aggiungi_sotto", "completa", "riapri", "elimina"] },
           target_number: { type: "STRING", description: "Numero dell'attività esistente coinvolta (es. '1.2'), copiato esattamente dall'elenco fornito. Per 'aggiungi_sotto' è il genitore." },
           title: { type: "STRING", description: "Titolo della nuova sotto-attività. Solo per 'aggiungi_sotto', altrimenti stringa vuota." },
         },
@@ -127,6 +127,10 @@ Un comando può generare PIÙ operazioni:
 - "segna pane e latte come fatti" → DUE operazioni completa, una per ciascuno
 - "ho fatto il bagno" → una operazione completa
 - "il pane non l'ho ancora preso" → una operazione riapri
+- "elimina il pane" / "cancella le pulizie" → una operazione elimina
+- "elimina pane e latte" → DUE operazioni elimina
+Attenzione: usa "elimina" solo se l'utente dice chiaramente di eliminare o
+cancellare. "ho fatto la spesa" significa completare, non eliminare.
 Elenca i prodotti separati da virgole o da "e" come operazioni distinte, una per ciascuno.
 Se la frase non si riferisce a nulla di esistente, lascia "operations" vuoto e compila i campi di creazione.`
     : "";

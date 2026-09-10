@@ -6,6 +6,26 @@ Ogni modifica al progetto incrementa il numero di versione qui sotto e in
 - **MINOR** (0.X.0): nuove funzionalità che non rompono quelle esistenti
 - **MAJOR** (X.0.0): cambiamenti che rompono la compatibilità con l'uso precedente
 
+## [0.15.0] — 2026-09-10
+
+Eliminazione delle voci to-do.
+
+- **Pulsante cestino su ogni riga** della lista, sia per le attività
+  principali sia per le sotto-attività
+- **Cestino anche nella scheda** del to-do, accanto a ciascuna
+  sotto-attività
+- **Comando vocale**: *"elimina il pane"*, *"cancella pane e latte"*
+  (anche più voci in un solo comando, come per le altre operazioni)
+- L'eliminazione porta con sé l'intero ramo sottostante. Prima di
+  procedere viene sempre chiesta conferma, indicando quante
+  sotto-attività verranno rimosse insieme
+- Le eliminazioni dettate a voce, a differenza delle altre operazioni,
+  **non vengono eseguite subito**: compare prima l'elenco di cosa
+  sparirebbe. Una parola capita male non deve cancellare dati
+- Nel prompt è specificato che "ho fatto la spesa" significa completare,
+  non eliminare: solo un'esplicita richiesta di cancellare produce
+  un'eliminazione
+
 ## [0.14.0] — 2026-09-09
 
 Comandi vocali multipli sui to-do.
@@ -192,6 +212,26 @@ Eventi su più giorni disegnati come barre.
   compariva nell'elenco sotto: risultava solo nel giorno iniziale
 - Un evento iniziato prima del periodo visualizzato non veniva caricato
   affatto: una vacanza a cavallo di fine mese spariva dal mese successivo
+
+## [0.15.0] — 2026-09-10
+
+Eliminazione delle voci to-do.
+
+- **Pulsante cestino su ogni riga** della lista, sia per le attività
+  principali sia per le sotto-attività
+- **Cestino anche nella scheda** del to-do, accanto a ciascuna
+  sotto-attività
+- **Comando vocale**: *"elimina il pane"*, *"cancella pane e latte"*
+  (anche più voci in un solo comando, come per le altre operazioni)
+- L'eliminazione porta con sé l'intero ramo sottostante. Prima di
+  procedere viene sempre chiesta conferma, indicando quante
+  sotto-attività verranno rimosse insieme
+- Le eliminazioni dettate a voce, a differenza delle altre operazioni,
+  **non vengono eseguite subito**: compare prima l'elenco di cosa
+  sparirebbe. Una parola capita male non deve cancellare dati
+- Nel prompt è specificato che "ho fatto la spesa" significa completare,
+  non eliminare: solo un'esplicita richiesta di cancellare produce
+  un'eliminazione
 
 ## [0.14.0] — 2026-09-09
 
