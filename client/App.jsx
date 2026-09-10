@@ -92,6 +92,9 @@ export default function App() {
   function catIcon(name) { return ICONS[categories.find((c) => c.name === name)?.icon] || Star; }
   // Alcune categorie chiedono la barra anche per gli eventi di un giorno solo
   function catBarra(name) { return !!categories.find((c) => c.name === name)?.bar_display; }
+  // Alcune categorie possono essere tenute fuori dalla vista Lista, pur
+  // restando visibili nei calendari e nella ricerca
+  function catNascostaInLista(name) { return !!categories.find((c) => c.name === name)?.hide_in_list; }
   function badgeColor(name) { return badges.find((b) => b.name === name)?.color || tokens.textSecondary; }
 
   // Nelle viste calendario il "+" crea l'evento nel giorno che stai
@@ -183,6 +186,7 @@ export default function App() {
 
   const nonRadar = occurrences
     .filter((o) => o.type !== "radar")
+    .filter((o) => !catNascostaInLista(o.category))
     .sort((a, b) => a.occurrence_at.localeCompare(b.occurrence_at));
 
   return (

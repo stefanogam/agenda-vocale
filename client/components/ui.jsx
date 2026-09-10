@@ -20,7 +20,26 @@ export function AddButton({ label, onClick }) {
   );
 }
 
-export function FormCard({ value, onChange, onSubmit, onCancel, onDelete, showIcons, showBarToggle, placeholder, cta }) {
+function Interruttore({ etichetta, attivo, coloreAttivo, spiegazione, onToggle }) {
+  return (
+    <>
+      <div className="flex items-center justify-between mb-1">
+        <p className="f-mono text-[10px] uppercase tracking-wider" style={{ color: tokens.textSecondary }}>{etichetta}</p>
+        <button
+          onClick={onToggle}
+          aria-label={etichetta}
+          className="w-10 h-6 rounded-full relative shrink-0"
+          style={{ background: attivo ? coloreAttivo : tokens.surface2 }}
+        >
+          <span className="absolute top-0.5 w-5 h-5 rounded-full transition-all" style={{ background: tokens.bg, left: attivo ? 18 : 2 }} />
+        </button>
+      </div>
+      <p className="text-xs mb-4" style={{ color: tokens.textSecondary }}>{spiegazione}</p>
+    </>
+  );
+}
+
+export function FormCard({ value, onChange, onSubmit, onCancel, onDelete, showIcons, showCategoryOptions, placeholder, cta }) {
   return (
     <div className="rounded-2xl p-4" style={{ background: tokens.surface, border: `1px solid ${tokens.border}` }}>
       <input autoFocus value={value.name} onChange={(e) => onChange({ ...value, name: e.target.value })} placeholder={placeholder}
@@ -52,24 +71,26 @@ export function FormCard({ value, onChange, onSubmit, onCancel, onDelete, showIc
         </>
       )}
 
-      {showBarToggle && (
+      {showCategoryOptions && (
         <>
-          <div className="flex items-center justify-between mb-1">
-            <p className="f-mono text-[10px] uppercase tracking-wider" style={{ color: tokens.textSecondary }}>Barra nel calendario</p>
-            <button
-              onClick={() => onChange({ ...value, bar_display: !value.bar_display })}
-              aria-label="Barra nel calendario"
-              className="w-10 h-6 rounded-full relative shrink-0"
-              style={{ background: value.bar_display ? value.color : tokens.surface2 }}
-            >
-              <span className="absolute top-0.5 w-5 h-5 rounded-full transition-all" style={{ background: tokens.bg, left: value.bar_display ? 18 : 2 }} />
-            </button>
-          </div>
-          <p className="text-xs mb-4" style={{ color: tokens.textSecondary }}>
-            {value.bar_display
+          <Interruttore
+            etichetta="Barra nel calendario"
+            attivo={!!value.bar_display}
+            coloreAttivo={value.color}
+            onToggle={() => onChange({ ...value, bar_display: !value.bar_display })}
+            spiegazione={value.bar_display
               ? "Anche gli appuntamenti di un solo giorno saranno mostrati con una barra colorata, come quelli di più giorni."
               : "Gli appuntamenti di un solo giorno sono mostrati con un puntino."}
-          </p>
+          />
+          <Interruttore
+            etichetta="Nascondi nella lista"
+            attivo={!!value.hide_in_list}
+            coloreAttivo={value.color}
+            onToggle={() => onChange({ ...value, hide_in_list: !value.hide_in_list })}
+            spiegazione={value.hide_in_list
+              ? "Gli elementi di questa categoria non compaiono nella vista Lista. Restano visibili in Mese, Settimana e nella ricerca."
+              : "Gli elementi di questa categoria compaiono nella vista Lista."}
+          />
         </>
       )}
 

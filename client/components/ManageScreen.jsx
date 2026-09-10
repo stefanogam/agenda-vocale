@@ -1,6 +1,6 @@
 // client/components/ManageScreen.jsx
 import { useState, useRef } from "react";
-import { ArrowLeft, Star, Download, Upload, Bell, BellOff, Send } from "lucide-react";
+import { ArrowLeft, Star, Download, Upload, Bell, BellOff, Send, EyeOff } from "lucide-react";
 import { tokens, SWATCHES, REMINDER_OPTIONS, reminderLabel } from "../lib/tokens.js";
 import { ICONS, ICON_KEYS } from "../lib/icons.js";
 import { FormCard, AddButton } from "./ui.jsx";
@@ -35,7 +35,7 @@ export default function ManageScreen({ onBack, categories, badges, settings, onA
 
   async function saveCategory() {
     if (!catForm?.name?.trim()) return;
-    if (catForm.id) await store.updateCategory(catForm.id, { name: catForm.name.trim(), color: catForm.color, icon: catForm.icon, bar_display: !!catForm.bar_display });
+    if (catForm.id) await store.updateCategory(catForm.id, { name: catForm.name.trim(), color: catForm.color, icon: catForm.icon, bar_display: !!catForm.bar_display, hide_in_list: !!catForm.hide_in_list });
     else await onAddCategory({ ...catForm, name: catForm.name.trim() });
     setCatForm(null);
     onDataRestored?.();
@@ -130,15 +130,16 @@ export default function ManageScreen({ onBack, categories, badges, settings, onA
             {categories.map((c) => { const Icon = ICONS[c.icon] || Star; return (
               <button
                 key={c.id}
-                onClick={() => setCatForm({ id: c.id, name: c.name, color: c.color, icon: c.icon, bar_display: !!c.bar_display, originalName: c.name })}
+                onClick={() => setCatForm({ id: c.id, name: c.name, color: c.color, icon: c.icon, bar_display: !!c.bar_display, hide_in_list: !!c.hide_in_list, originalName: c.name })}
                 className="rounded-2xl px-4 py-3 flex items-center gap-3 w-full text-left"
                 style={{ background: tokens.surface, border: `1px solid ${catForm?.id === c.id ? tokens.amber : tokens.border}` }}
               >
                 <div className="rounded-full p-2" style={{ background: `${c.color}22` }}><Icon size={15} color={c.color} /></div>
                 <span className="text-sm" style={{ color: tokens.textPrimary }}>{c.name}</span>
+                {c.hide_in_list && <EyeOff size={12} color={tokens.textSecondary} className="ml-auto" />}
                 {c.bar_display
-                  ? <span className="ml-auto rounded-full" style={{ width: 18, height: 3, background: c.color }} />
-                  : <span className="ml-auto w-2.5 h-2.5 rounded-full" style={{ background: c.color }} />}
+                  ? <span className={c.hide_in_list ? "rounded-full" : "ml-auto rounded-full"} style={{ width: 18, height: 3, background: c.color }} />
+                  : <span className={c.hide_in_list ? "w-2.5 h-2.5 rounded-full" : "ml-auto w-2.5 h-2.5 rounded-full"} style={{ background: c.color }} />}
               </button>
             ); })}
           </div>
@@ -147,7 +148,7 @@ export default function ManageScreen({ onBack, categories, badges, settings, onA
               value={catForm}
               onChange={setCatForm}
               showIcons
-              showBarToggle
+              showCategoryOptions
               placeholder="Nome categoria (es. Viaggi)"
               cta={catForm.id ? "Salva" : "Crea categoria"}
               onCancel={() => setCatForm(null)}
@@ -155,7 +156,7 @@ export default function ManageScreen({ onBack, categories, badges, settings, onA
               onDelete={catForm.id ? removeCategory : undefined}
             />
           ) : (
-            <AddButton label="Nuova categoria" onClick={() => setCatForm({ name: "", color: SWATCHES[0], icon: ICON_KEYS[0], bar_display: false })} />
+            <AddButton label="Nuova categoria" onClick={() => setCatForm({ name: "", color: SWATCHES[0], icon: ICON_KEYS[0], bar_display: false, hide_in_list: false })} />
           )}
         </>
       )}
